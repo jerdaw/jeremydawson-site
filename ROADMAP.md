@@ -34,12 +34,18 @@ Status key:
 ### P2
 
 - `optional` Replace current project-summary copy with final launch copy once the live URLs and positioning are fully settled.
-- `optional` Add custom domain support if the site should move off the default GitHub Pages URL.
 - `optional` Add social preview image and richer Open Graph metadata for sharing.
+
+## Operational Follow-Up
+
+- `pending` Update the DNS zone for `jeremydawson.ca` so the custom domain resolves to GitHub Pages.
+- `pending` After DNS propagates, confirm GitHub Pages reports `jeremydawson.ca` as the active domain and smoke-test both apex and `www`.
 
 ## Notes
 
-- Live URL: `https://jerdaw.github.io/`
+- Repository URL: `https://github.com/jerdaw/jeremydawson-site`
+- Current Pages URL: `https://jerdaw.github.io/`
+- Intended canonical URL: `https://jeremydawson.ca/`
 - LinkedIn remains intentionally absent until a verified public URL is confirmed.
 - Resume download remains intentionally absent until a public-safe PDF is chosen.
 - The current implementation is otherwise in a shippable state and passes `npm run check` and `npm run build`.
