@@ -22,9 +22,9 @@ Status key:
 
 ### P0
 
-- `pending` Publish this `site/` directory as its own GitHub repository.
-- `pending` Enable GitHub Pages in that repository and set the source to `GitHub Actions`.
-- `pending` Confirm the Pages deployment URL and smoke-test the live site after first deploy.
+- `done` Publish this `site/` directory as its own GitHub repository.
+- `done` Enable GitHub Pages in that repository and set the source to `GitHub Actions`.
+- `done` Confirm the Pages deployment URL and smoke-test the live site after first deploy.
 
 ### P1
 
@@ -39,6 +39,7 @@ Status key:
 
 ## Notes
 
+- Live URL: `https://jerdaw.github.io/`
 - LinkedIn remains intentionally absent until a verified public URL is confirmed.
 - Resume download remains intentionally absent until a public-safe PDF is chosen.
 - The current implementation is otherwise in a shippable state and passes `npm run check` and `npm run build`.
