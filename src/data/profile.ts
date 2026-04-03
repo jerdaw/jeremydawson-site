@@ -26,11 +26,20 @@ export type CtaLink = {
   label: string;
 };
 
-export type SocialLink = {
+export type ContactLink = {
   label: string;
   value: string;
   href: string;
   detail: string;
+};
+
+export type PrivateContactCard = {
+  label: string;
+  placeholder: string;
+  detail: string;
+  revealLabel: string;
+  copyLabel: string;
+  mailLabel: string;
 };
 
 export type TimelineEntry = {
@@ -321,13 +330,16 @@ export const contactSection: SectionIntro = {
     "Email is the best path for roles, collaboration, or research-adjacent work. GitHub and current project links are below.",
 };
 
-export const contactLinks: SocialLink[] = [
-  {
-    label: "Email",
-    value: "jeremyjdawson@gmail.com",
-    href: "mailto:jeremyjdawson@gmail.com",
-    detail: "Best for roles, research, collaboration, and direct contact.",
-  },
+export const privateEmailContact: PrivateContactCard = {
+  label: "Email",
+  placeholder: "Available on click",
+  detail: "Best for roles, research, collaboration, and direct contact.",
+  revealLabel: "Reveal address",
+  copyLabel: "Copy email",
+  mailLabel: "Open mail app",
+};
+
+export const contactLinks: ContactLink[] = [
   {
     label: "GitHub",
     value: "github.com/jerdaw",
