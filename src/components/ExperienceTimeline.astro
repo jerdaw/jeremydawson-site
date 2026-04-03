@@ -1,0 +1,32 @@
+---
+import type { TimelineEntry } from "../data/profile";
+
+type Props = {
+  entries: TimelineEntry[];
+};
+
+const { entries } = Astro.props;
+---
+
+<div class="timeline">
+  {entries.map((entry, index) => (
+    <article class="timeline__entry observe" data-reveal style={`--entry-index:${index};`}>
+      <div class="timeline__meta">
+        <p class="timeline__date">{entry.dateRange}</p>
+        <p class="timeline__location">{entry.location}</p>
+      </div>
+
+      <div class="timeline__content">
+        <p class="timeline__role">{entry.title}</p>
+        <h3>{entry.organization}</h3>
+        <p class="timeline__summary">{entry.summary}</p>
+
+        <ul class="timeline__tags" aria-label={`${entry.organization} focus areas`}>
+          {entry.tags.map((tag) => (
+            <li>{tag}</li>
+          ))}
+        </ul>
+      </div>
+    </article>
+  ))}
+</div>

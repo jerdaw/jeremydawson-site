@@ -1,0 +1,19 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { siteMeta } from "../data/profile";
+---
+
+<BaseLayout title={`Not Found | ${siteMeta.title}`} description={siteMeta.description}>
+  <main class="section" style="min-height: calc(100svh - 8rem); display: grid; align-items: center;">
+    <div class="observe is-visible" data-reveal>
+      <p class="section__eyebrow">404</p>
+      <h1 class="section__title">That page does not exist.</h1>
+      <p class="section__lede">
+        The link may be stale, or the page may have moved during a rebuild. Return to the homepage to keep browsing.
+      </p>
+      <div class="hero__actions" style="margin-top: 1.75rem;">
+        <a class="button button--primary" href={import.meta.env.BASE_URL}>Back to home</a>
+      </div>
+    </div>
+  </main>
+</BaseLayout>

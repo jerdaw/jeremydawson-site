@@ -1,0 +1,26 @@
+---
+import type { NavLink } from "../data/profile";
+
+type Props = {
+  navLinks: NavLink[];
+};
+
+const { navLinks } = Astro.props;
+---
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="site-header__brand" href="#top">
+      <span class="site-header__mark">JD</span>
+      <span class="site-header__name">Jeremy Dawson</span>
+    </a>
+
+    <nav class="site-header__nav" aria-label="Primary">
+      {navLinks.map((link) => (
+        <a href={link.href} data-nav-link={link.href.replace("#", "")}>
+          {link.label}
+        </a>
+      ))}
+    </nav>
+  </div>
+</header>

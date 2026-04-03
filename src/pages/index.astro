@@ -1,0 +1,150 @@
+---
+import Enhancements from "../components/Enhancements.astro";
+import ExperienceTimeline from "../components/ExperienceTimeline.astro";
+import ProjectCards from "../components/ProjectCards.astro";
+import SignalField from "../components/SignalField.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import {
+  about,
+  contactLinks,
+  experience,
+  featuredProjects,
+  hero,
+  navLinks,
+  siteMeta,
+  speaking,
+} from "../data/profile";
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title={siteMeta.title} description={siteMeta.description}>
+  <div class="site-shell">
+    <SiteHeader navLinks={navLinks} />
+
+    <main data-scroll-root>
+      <section class="section hero" id="top" data-section="top">
+        <div class="hero__copy observe is-visible" data-reveal>
+          <p class="hero__eyebrow">{hero.eyebrow}</p>
+          <h1 class="hero__title">{hero.headline}</h1>
+          <p class="hero__intro">{hero.intro}</p>
+
+          <div class="hero__actions">
+            <a class="button button--primary" href={hero.primaryCta.href}>
+              {hero.primaryCta.label}
+            </a>
+            <a class="button button--secondary" href={hero.secondaryCta.href}>
+              {hero.secondaryCta.label}
+            </a>
+          </div>
+
+          <dl class="hero__highlights">
+            {hero.highlights.map((item) => (
+              <div class="hero__stat">
+                <dt>{item.label}</dt>
+                <dd>{item.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        <SignalField />
+      </section>
+
+      <section class="section" id="about" data-section="about">
+        <p class="section__eyebrow">About</p>
+        <div class="about">
+          <div class="about__body observe" data-reveal>
+            <h2 class="section__title">Technical work with public consequences.</h2>
+            <p class="about__lead">{about.lead}</p>
+            {about.body.map((paragraph) => (
+              <p>{paragraph}</p>
+            ))}
+          </div>
+
+          <ul class="about__principles observe" data-reveal aria-label="Working principles">
+            {about.principles.map((principle) => (
+              <li>{principle}</li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section class="section" id="experience" data-section="experience">
+        <div class="experience-shell">
+          <aside class="experience-shell__aside observe" data-reveal>
+            <div class="experience-shell__panel">
+              <p class="section__eyebrow">Experience</p>
+              <h2 class="section__title">A timeline anchored in systems and communication.</h2>
+              <p class="section__lede">
+                Recent work is centered on public-interest and health-facing products, supported by a longer
+                background in software, teaching, research, and explanation-heavy work.
+              </p>
+              <div class="experience-shell__rail" aria-hidden="true"></div>
+            </div>
+          </aside>
+
+          <ExperienceTimeline entries={experience} />
+        </div>
+      </section>
+
+      <section class="section" id="projects" data-section="projects">
+        <p class="section__eyebrow">Selected Work</p>
+        <h2 class="section__title">Public-interest projects with product discipline.</h2>
+        <p class="section__lede">
+          These are the projects I would foreground first: work where software, data quality, public trust, and
+          interface clarity have to hold together at the same time.
+        </p>
+
+        <div style="margin-top: 2rem;">
+          <ProjectCards projects={featuredProjects} />
+        </div>
+      </section>
+
+      <section class="section" id="speaking" data-section="speaking">
+        <p class="section__eyebrow">Writing & Speaking</p>
+        <h2 class="section__title">Communication is part of the work, not decoration.</h2>
+        <p class="section__lede">
+          This section is intentionally compact for now, but it shows the continuity between product work, teaching,
+          and research communication.
+        </p>
+
+        <div class="speaking-grid">
+          {speaking.map((entry) => (
+            <article class="speaking-card observe" data-reveal>
+              <p>
+                {entry.date} · {entry.format}
+              </p>
+              <h3>{entry.title}</h3>
+              <p>{entry.summary}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section class="section" id="contact" data-section="contact">
+        <p class="section__eyebrow">Contact</p>
+        <h2 class="section__title">If the work is adjacent, reach out.</h2>
+        <p class="section__lede">
+          The links below point to current public contact and project surfaces.
+        </p>
+
+        <div class="contact-grid">
+          {contactLinks.map((link) => (
+            <a href={link.href} class="contact-card observe" data-reveal>
+              <div class="contact-card__label">{link.label}</div>
+              <div class="contact-card__value">{link.value}</div>
+              <div class="contact-card__detail">{link.detail}</div>
+            </a>
+          ))}
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      Built as a static Astro site with a typed content model and an original visual system shaped around signal,
+      systems, and method visibility.
+    </footer>
+  </div>
+
+  <Enhancements />
+</BaseLayout>

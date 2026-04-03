@@ -1,0 +1,50 @@
+---
+import type { ProjectEntry } from "../data/profile";
+
+type Props = {
+  projects: ProjectEntry[];
+};
+
+const { projects } = Astro.props;
+---
+
+<div class="project-grid">
+  {projects.map((project, index) => (
+    <article class="project-card observe" data-reveal style={`--card-index:${index};`}>
+      <div class="project-card__topline">
+        <p>{project.status}</p>
+        <span class="project-card__index">{String(index + 1).padStart(2, "0")}</span>
+      </div>
+
+      <h3>{project.name}</h3>
+      <p class="project-card__one-liner">{project.oneLiner}</p>
+
+      <dl class="project-card__details">
+        <div>
+          <dt>Problem</dt>
+          <dd>{project.problem}</dd>
+        </div>
+        <div>
+          <dt>Contribution</dt>
+          <dd>{project.contribution}</dd>
+        </div>
+      </dl>
+
+      {project.metrics && <p class="project-card__metric">{project.metrics}</p>}
+
+      <ul class="project-card__stack" aria-label={`${project.name} technologies and themes`}>
+        {project.stack.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ul>
+
+      <div class="project-card__links">
+        {project.links.map((link) => (
+          <a href={link.href} class:list={[{ "is-placeholder": link.isPlaceholder }]}>
+            {link.label}
+          </a>
+        ))}
+      </div>
+    </article>
+  ))}
+</div>
