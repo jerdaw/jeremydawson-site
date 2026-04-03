@@ -1,0 +1,72 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="88" y1="76" x2="1116" y2="612" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FCF8F1"/>
+      <stop offset="1" stop-color="#F0E7DB"/>
+    </linearGradient>
+    <radialGradient id="glowA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(906 122) rotate(114.58) scale(318.433 530.199)">
+      <stop stop-color="#0D6B74" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#0D6B74" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1048 456) rotate(156.557) scale(232.81 172.484)">
+      <stop stop-color="#205B9D" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#205B9D" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="signal" x1="737" y1="118" x2="1070" y2="511" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0D6B74"/>
+      <stop offset="1" stop-color="#205B9D"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" rx="32" fill="url(#bg)"/>
+  <rect x="36" y="36" width="1128" height="558" rx="24" fill="#FFFCF7" fill-opacity="0.32" stroke="#101820" stroke-opacity="0.08" />
+  <rect width="1200" height="630" fill="url(#glowA)"/>
+  <rect width="1200" height="630" fill="url(#glowB)"/>
+
+  <g opacity="0.32">
+    <path d="M92 0V630" stroke="#101820" stroke-opacity="0.08"/>
+    <path d="M188 0V630" stroke="#101820" stroke-opacity="0.08"/>
+    <path d="M284 0V630" stroke="#101820" stroke-opacity="0.08"/>
+    <path d="M380 0V630" stroke="#101820" stroke-opacity="0.08"/>
+    <path d="M476 0V630" stroke="#101820" stroke-opacity="0.08"/>
+    <path d="M572 0V630" stroke="#101820" stroke-opacity="0.08"/>
+    <path d="M668 0V630" stroke="#101820" stroke-opacity="0.08"/>
+    <path d="M764 0V630" stroke="#101820" stroke-opacity="0.08"/>
+    <path d="M860 0V630" stroke="#101820" stroke-opacity="0.08"/>
+    <path d="M956 0V630" stroke="#101820" stroke-opacity="0.08"/>
+    <path d="M1052 0V630" stroke="#101820" stroke-opacity="0.08"/>
+    <path d="M1148 0V630" stroke="#101820" stroke-opacity="0.08"/>
+    <path d="M0 108H1200" stroke="#101820" stroke-opacity="0.08"/>
+    <path d="M0 204H1200" stroke="#101820" stroke-opacity="0.08"/>
+    <path d="M0 300H1200" stroke="#101820" stroke-opacity="0.08"/>
+    <path d="M0 396H1200" stroke="#101820" stroke-opacity="0.08"/>
+    <path d="M0 492H1200" stroke="#101820" stroke-opacity="0.08"/>
+  </g>
+
+  <g>
+    <path d="M112 136H214" stroke="#0A4E5B" stroke-width="3"/>
+    <text x="112" y="114" fill="#0A4E5B" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="6">JEREMY DAWSON</text>
+    <text x="112" y="276" fill="#101820" font-family="Georgia, 'Times New Roman', serif" font-size="90" font-weight="700" letter-spacing="-3">Software, Research,</text>
+    <text x="112" y="364" fill="#101820" font-family="Georgia, 'Times New Roman', serif" font-size="90" font-weight="700" letter-spacing="-3">Public Systems</text>
+    <text x="112" y="444" fill="#59626A" font-family="Helvetica, Arial, sans-serif" font-size="32" font-weight="500">
+      Building health-facing, research-heavy, and
+    </text>
+    <text x="112" y="486" fill="#59626A" font-family="Helvetica, Arial, sans-serif" font-size="32" font-weight="500">
+      public-interest tools that stay legible under real constraints.
+    </text>
+    <text x="112" y="548" fill="#CB8A32" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="2">JEREMYDAWSON.CA</text>
+  </g>
+
+  <g>
+    <path d="M776 154C834 133 891 150 935 197C980 245 1012 319 1020 388C1028 457 1015 510 971 548" stroke="url(#signal)" stroke-width="12" stroke-linecap="round"/>
+    <path d="M711 222C771 205 832 221 881 264C930 307 961 370 967 432C973 494 960 542 926 570" stroke="#0D6B74" stroke-opacity="0.48" stroke-width="5" stroke-linecap="round"/>
+    <path d="M806 118C875 119 938 154 983 212C1028 270 1051 343 1045 415C1039 487 1002 545 940 584" stroke="#205B9D" stroke-opacity="0.38" stroke-width="3" stroke-linecap="round" stroke-dasharray="8 10"/>
+    <circle cx="779" cy="153" r="15" fill="#CB8A32"/>
+    <circle cx="1020" cy="389" r="17" fill="#0D6B74"/>
+    <circle cx="971" cy="548" r="14" fill="#205B9D"/>
+    <circle cx="907" cy="269" r="109" stroke="#101820" stroke-opacity="0.1" stroke-width="2"/>
+    <circle cx="923" cy="355" r="168" stroke="#101820" stroke-opacity="0.07" stroke-width="2"/>
+    <circle cx="875" cy="430" r="84" stroke="#101820" stroke-opacity="0.08" stroke-width="2"/>
+    <path d="M723 496C779 457 833 444 894 460" stroke="#CB8A32" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 12"/>
+  </g>
+</svg>

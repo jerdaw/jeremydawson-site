@@ -3,7 +3,15 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import { siteMeta } from "../data/profile";
 ---
 
-<BaseLayout title={`Not Found | ${siteMeta.title}`} description={siteMeta.description}>
+<BaseLayout
+  title={`Not Found | ${siteMeta.title}`}
+  description={siteMeta.description}
+  siteName={siteMeta.siteName}
+  image={siteMeta.socialImage.path}
+  imageAlt={siteMeta.socialImage.alt}
+  imageWidth={siteMeta.socialImage.width}
+  imageHeight={siteMeta.socialImage.height}
+>
   <main class="section" style="min-height: calc(100svh - 8rem); display: grid; align-items: center;">
     <div class="observe is-visible" data-reveal>
       <p class="section__eyebrow">404</p>

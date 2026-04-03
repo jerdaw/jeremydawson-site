@@ -18,7 +18,7 @@ const { entries } = Astro.props;
 
       <div class="timeline__content">
         <p class="timeline__role">{entry.title}</p>
-        <h3>{entry.organization}</h3>
+        {entry.link ? <h3><a href={entry.link}>{entry.organization}</a></h3> : <h3>{entry.organization}</h3>}
         <p class="timeline__summary">{entry.summary}</p>
 
         <ul class="timeline__tags" aria-label={`${entry.organization} focus areas`}>

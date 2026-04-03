@@ -2,7 +2,7 @@
 
 ## Current Status
 
-Phase: `Launch preparation`
+Phase: `Post-launch polish`
 
 Implemented:
 
@@ -11,6 +11,8 @@ Implemented:
 - GitHub Pages deployment workflow
 - Static `404.html` output
 - Public email, GitHub, and live project links wired into site content
+- Production deployment on `jeremydawson.ca`
+- Rewritten launch copy and richer social metadata
 
 ## Immediate Launch Tasks
 
@@ -33,19 +35,19 @@ Status key:
 
 ### P2
 
-- `optional` Replace current project-summary copy with final launch copy once the live URLs and positioning are fully settled.
-- `optional` Add social preview image and richer Open Graph metadata for sharing.
+- `done` Replace placeholder launch copy with final positioning across hero, section framing, projects, research, contact, and footer.
+- `done` Add a social preview image and richer Open Graph / Twitter metadata for sharing.
 
 ## Operational Follow-Up
 
-- `pending` Update the DNS zone for `jeremydawson.ca` so the custom domain resolves to GitHub Pages.
-- `pending` After DNS propagates, confirm GitHub Pages reports `jeremydawson.ca` as the active domain and smoke-test both apex and `www`.
+- `done` Update the DNS zone for `jeremydawson.ca` so the custom domain resolves to GitHub Pages.
+- `done` Confirm GitHub Pages reports `jeremydawson.ca` as the active domain and smoke-test both apex and `www`.
 
 ## Notes
 
 - Repository URL: `https://github.com/jerdaw/jeremydawson-site`
-- Current Pages URL: `https://jerdaw.github.io/`
+- Current Pages URL: `https://jeremydawson.ca/`
 - Intended canonical URL: `https://jeremydawson.ca/`
 - LinkedIn remains intentionally absent until a verified public URL is confirmed.
 - Resume download remains intentionally absent until a public-safe PDF is chosen.
-- The current implementation is otherwise in a shippable state and passes `npm run check` and `npm run build`.
+- The current implementation is live and should continue to pass `npm run check` and `npm run build`.

@@ -137,7 +137,7 @@ html[data-active-section="top"] [data-nav-link="top"],
 html[data-active-section="about"] [data-nav-link="about"],
 html[data-active-section="experience"] [data-nav-link="experience"],
 html[data-active-section="projects"] [data-nav-link="projects"],
-html[data-active-section="speaking"] [data-nav-link="speaking"],
+html[data-active-section="research"] [data-nav-link="research"],
 html[data-active-section="contact"] [data-nav-link="contact"] {
   color: var(--ink);
   background: rgba(16, 24, 32, 0.07);

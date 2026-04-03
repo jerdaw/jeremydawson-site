@@ -1,4 +1,27 @@
+export type SiteMeta = {
+  title: string;
+  description: string;
+  siteName: string;
+  socialImage: {
+    path: string;
+    alt: string;
+    width: number;
+    height: number;
+  };
+};
+
 export type NavLink = {
+  href: string;
+  label: string;
+};
+
+export type SectionIntro = {
+  eyebrow: string;
+  title: string;
+  lede: string;
+};
+
+export type CtaLink = {
   href: string;
   label: string;
 };
@@ -8,7 +31,6 @@ export type SocialLink = {
   value: string;
   href: string;
   detail: string;
-  isPlaceholder?: boolean;
 };
 
 export type TimelineEntry = {
@@ -36,17 +58,24 @@ export type ProjectEntry = {
   }>;
 };
 
-export type SpeakingEntry = {
+export type ResearchEntry = {
   title: string;
   date: string;
   format: string;
   summary: string;
 };
 
-export const siteMeta = {
-  title: "Jeremy Dawson | Interdisciplinary Builder",
+export const siteMeta: SiteMeta = {
+  title: "Jeremy Dawson | Software, Research, and Public-Interest Systems",
   description:
-    "Professional portfolio for Jeremy Dawson, focused on software, public-interest systems, research communication, and health-facing tools.",
+    "Jeremy Dawson builds software and information tools for health-facing, public-interest, and research-heavy work.",
+  siteName: "Jeremy Dawson",
+  socialImage: {
+    path: "/og/jeremy-dawson-social.png",
+    alt: "Editorial social card for Jeremy Dawson with abstract teal and cobalt signal lines on a warm off-white background.",
+    width: 1200,
+    height: 630,
+  },
 };
 
 export const navLinks: NavLink[] = [
@@ -54,51 +83,60 @@ export const navLinks: NavLink[] = [
   { href: "#about", label: "About" },
   { href: "#experience", label: "Experience" },
   { href: "#projects", label: "Projects" },
-  { href: "#speaking", label: "Writing & Speaking" },
+  { href: "#research", label: "Research" },
   { href: "#contact", label: "Contact" },
 ];
 
 export const hero = {
-  eyebrow: "Software, public-interest systems, and health-facing tools",
-  headline: "I build software for public-facing complexity.",
+  eyebrow: "Software, research, and public-interest systems",
+  headline: "I build software for health, research, and public systems.",
   intro:
-    "My work sits where software, public communication, and messy real-world systems overlap. I build products and data tools that make methodology, service access, and difficult workflows more legible instead of hiding the complexity behind polished surfaces.",
+    "I build tools for health information, service access, archival continuity, and research communication. My background combines software development, academic research, teaching, and publishing.",
   primaryCta: {
     href: "#projects",
     label: "View selected work",
-  },
+  } satisfies CtaLink,
   secondaryCta: {
     href: "#contact",
-    label: "Get in touch",
-  },
+    label: "Contact me",
+  } satisfies CtaLink,
   highlights: [
     {
-      label: "Current direction",
-      value: "Public-interest technology",
+      label: "Current work",
+      value: "Health and public-interest products",
     },
     {
-      label: "Core strength",
-      value: "Systems thinking and communication",
+      label: "Strengths",
+      value: "Product thinking, data clarity, communication",
     },
     {
       label: "Background",
-      value: "Software, philosophy, teaching",
+      value: "Software, research, teaching, publishing",
     },
   ],
 };
 
 export const about = {
+  eyebrow: "About",
+  title: "Software for domains that need precision.",
   lead:
-    "I do my best work where technical systems carry public consequences: health information, service access, decision support, and communication under real constraints.",
+    "I do my best work on problems where software, data, and explanation have to hold together.",
   body: [
-    "Before moving into software full-time, I worked in philosophy, teaching, research support, and academic publishing. That background still shapes how I build: I care about clarity, traceability, edge cases, and explaining difficult material without sanding off what matters.",
-    "The result is a practice that combines product thinking, workflow design, and disciplined communication. I am especially drawn to projects that need both technical rigor and public trust.",
+    "Before moving into software full-time, I worked in philosophy, teaching, research support, and academic publishing. That background gave me a high tolerance for ambiguity, a low tolerance for sloppy reasoning, and a lasting interest in careful communication.",
+    "The work I take on now usually sits in health, public-interest, and research-heavy settings. It tends to involve messy source material, real workflow constraints, and users who need clarity more than spectacle.",
   ],
   principles: [
-    "Build for legibility, not just feature count.",
-    "Treat data quality and methodology as product concerns.",
-    "Keep interfaces calm even when the underlying system is complex.",
+    "Make assumptions and methodology visible.",
+    "Design for real workflows, not idealized users.",
+    "Keep claims precise and interfaces calm.",
   ],
+};
+
+export const experienceSection: SectionIntro = {
+  eyebrow: "Experience",
+  title: "Recent work and background.",
+  lede:
+    "Recent work centers on public-interest and health-facing products. Earlier roles in research, teaching, and publishing still shape how I design software and explain technical material.",
 };
 
 export const experience: TimelineEntry[] = [
@@ -108,8 +146,8 @@ export const experience: TimelineEntry[] = [
     dateRange: "2026 to present",
     location: "Kingston, ON",
     summary:
-      "Building a health-systems observatory that audits Canadian emergency department wait-time data and exposes why naive cross-province comparisons are often methodologically invalid.",
-    tags: ["Health data", "Analytics", "Public methodology"],
+      "Building a live observatory for Canadian emergency department wait times, including province-level data pipelines, measurement tagging, and public explanations of why many cross-province comparisons are not methodologically equivalent.",
+    tags: ["Health data", "Analytics", "Methodology"],
   },
   {
     title: "Founder and Developer",
@@ -117,8 +155,8 @@ export const experience: TimelineEntry[] = [
     dateRange: "2026 to present",
     location: "Kingston, ON",
     summary:
-      "Developing a clinician-ready visit preparation tool that turns patient and caregiver information into concise one-page briefs with explicit safety boundaries.",
-    tags: ["Product design", "Health communication", "Safety constraints"],
+      "Building a visit-preparation tool that helps patients and caregivers turn complex histories into concise one-page briefs while staying outside diagnosis, triage, and treatment advice.",
+    tags: ["Product design", "Health communication", "Safety boundaries"],
   },
   {
     title: "Founder and Developer",
@@ -126,8 +164,8 @@ export const experience: TimelineEntry[] = [
     dateRange: "2025 to present",
     location: "Kingston, ON",
     summary:
-      "Leading public-interest platforms focused on verified service access, support navigation, and preservation of public-health information.",
-    tags: ["Service access", "Accessibility", "Public-interest tech"],
+      "Building public-interest platforms for verified service discovery and long-term preservation of health information, with emphasis on governance, accessibility, and continuity.",
+    tags: ["Service access", "Archiving", "Accessibility"],
   },
   {
     title: "Software Developer",
@@ -135,8 +173,8 @@ export const experience: TimelineEntry[] = [
     dateRange: "2025 to present",
     location: "Kingston, ON",
     summary:
-      "Supporting web development, infrastructure, and archival continuity work for preserved CDC public-health information.",
-    tags: ["Web development", "Archival systems", "Search"],
+      "Contributing web development, search, and infrastructure work that improves access to archived CDC public-health material.",
+    tags: ["Web development", "Search", "Archival systems"],
   },
   {
     title: "Independent Software Developer",
@@ -144,32 +182,39 @@ export const experience: TimelineEntry[] = [
     dateRange: "2022 to 2025",
     location: "Waterloo, ON",
     summary:
-      "Built an end-to-end investment platform with real-time analytics, execution logic, backtesting, and risk-control features.",
-    tags: ["Full-stack product", "Analytics", "Backtesting"],
+      "Worked full-time as an independent developer building an end-to-end investment platform with real-time analytics, rules-based execution, backtesting, and risk controls.",
+    tags: ["Full-stack development", "Analytics", "Risk systems"],
   },
   {
-    title: "Graduate Teaching Assistant and Research Support",
-    organization: "University of British Columbia and Toronto Metropolitan University",
-    dateRange: "2014 to 2019",
+    title: "Teaching Assistant, Research Support, and Publishing Work",
+    organization: "UBC, Toronto Metropolitan University, and Canadian Journal of Philosophy",
+    dateRange: "2013 to 2019",
     location: "Toronto, ON and Vancouver, BC",
     summary:
-      "Taught tutorials, evaluated student work, and supported research and conference operations across philosophy, ethics, and academic communication.",
-    tags: ["Teaching", "Research support", "Communication"],
+      "Taught undergraduate courses, supported research and conference operations, and worked in academic publishing and writing support. That experience still shapes how I handle communication-heavy technical work.",
+    tags: ["Teaching", "Research support", "Publishing"],
   },
 ];
+
+export const projectsSection: SectionIntro = {
+  eyebrow: "Selected Work",
+  title: "Selected projects.",
+  lede:
+    "These projects best represent how I work: end-to-end ownership, careful boundaries, and systems that stay legible to the people who depend on them.",
+};
 
 export const featuredProjects: ProjectEntry[] = [
   {
     name: "Wait Time Canada",
     status: "In active development",
     oneLiner:
-      "A health-systems observatory for Canadian emergency department wait-time methodology and data quality.",
+      "A live observatory that audits how Canadian emergency department wait times are measured and compared.",
     problem:
-      "Public wait-time comparisons are often presented as if they were directly comparable when they are not measured the same way.",
+      "Provincial wait-time reporting is often treated as apples-to-apples when the underlying definitions and collection methods differ.",
     contribution:
-      "I am building the data model, measurement taxonomy, explanatory layer, and public-facing interface so reporting assumptions stay visible instead of disappearing behind a leaderboard.",
-    stack: ["Astro", "Data pipelines", "Analytics design", "Content systems"],
-    metrics: "Current scope includes 4 provinces and 390-plus hospital records.",
+      "I built the data pipelines, measurement taxonomy, explanatory content, and public interface so users can inspect the methodology instead of trusting a summary number.",
+    stack: ["Astro", "Data pipelines", "Health analytics", "Methodology design"],
+    metrics: "Current dataset covers 390-plus hospital records across 4 provinces.",
     links: [
       { label: "Live site", href: "https://wait-time.ca" },
       { label: "GitHub", href: "https://github.com/jerdaw/waittimecanada" },
@@ -177,15 +222,14 @@ export const featuredProjects: ProjectEntry[] = [
   },
   {
     name: "VisitBrief.com",
-    status: "Pilot-stage concept and product build",
+    status: "Pilot-stage product build",
     oneLiner:
-      "A Canada-first visit-preparation tool for producing concise, clinician-ready briefs.",
+      "A visit-preparation tool that turns complex patient and caregiver information into concise clinician-ready briefs.",
     problem:
-      "Patients and caregivers often arrive at appointments with fragmented information, making already short clinical encounters harder to use well.",
+      "Short appointments reward organized signal, but patients and caregivers often arrive with fragmented timelines, medication details, and scattered notes.",
     contribution:
-      "I am defining the workflow, information structure, compiler guardrails, and product language for a tool that improves signal without drifting into diagnosis, triage, or treatment advice.",
-    stack: ["Workflow design", "Prompted content systems", "Privacy-minded UX"],
-    metrics: "Positioned explicitly as a communication aid, not a clinical decision tool.",
+      "I designed the workflow, safety boundaries, and information structure for a product that improves communication without drifting into diagnosis, triage, or treatment advice.",
+    stack: ["Workflow design", "Health communication", "Safety-first UX"],
     links: [
       { label: "Live site", href: "https://visitbrief.com" },
       { label: "GitHub", href: "https://github.com/jerdaw/visitbrief" },
@@ -195,13 +239,13 @@ export const featuredProjects: ProjectEntry[] = [
     name: "HelpBridge.ca",
     status: "Pilot-stage public-interest platform",
     oneLiner:
-      "A verified, governance-first support search platform for food, housing, crisis, health, legal, and related services.",
+      "A verified service-search platform for food, housing, crisis, health, legal, and related supports.",
     problem:
-      "People trying to find services often face scattered directories, stale listings, and a search experience that assumes time, literacy, and stability they may not have.",
+      "People looking for help routinely encounter stale directories, inconsistent intake information, and search tools that assume time and stability they may not have.",
     contribution:
-      "I am shaping the information model, manual verification workflow, multilingual accessibility direction, and product structure for a service directory designed around trust.",
+      "I built the verification model, directory structure, and public-facing product around trust, clarity, accessibility, and local usefulness.",
     stack: ["Information architecture", "Accessibility", "Service discovery"],
-    metrics: "Current dataset covers 196 hand-verified Kingston services.",
+    metrics: "Initial dataset covers 196 hand-verified Kingston services.",
     links: [
       { label: "Live site", href: "https://helpbridge.ca" },
       { label: "GitHub", href: "https://github.com/jerdaw/helpbridge" },
@@ -211,11 +255,11 @@ export const featuredProjects: ProjectEntry[] = [
     name: "HealthArchive.ca",
     status: "Ongoing archival project",
     oneLiner:
-      "A Canadian public-health archive focused on preserving health data and guidance.",
+      "A public-health archive focused on durable access to guidance, data, and historical snapshots.",
     problem:
-      "Important public-health information can disappear, move, or lose context right when continuity matters most.",
+      "Public-health information can disappear, move, or lose context just when continuity and citation matter most.",
     contribution:
-      "I am leading the archival product direction, preservation workflow, and public framing for durable access to health information and archived snapshots.",
+      "I lead the preservation workflow, delivery model, and public framing for an archive designed for usable long-term access.",
     stack: ["Archival systems", "Content strategy", "Static delivery"],
     links: [
       { label: "Live site", href: "https://healtharchive.ca" },
@@ -226,11 +270,11 @@ export const featuredProjects: ProjectEntry[] = [
     name: "RestoredCDC.org",
     status: "Contributor",
     oneLiner:
-      "Development and restoration work supporting continuity of access to CDC material.",
+      "Development and restoration work supporting continuity of access to archived CDC material.",
     problem:
-      "Archived public-health material needs more than storage; it needs usable search, comparison, and resilient delivery.",
+      "Preserved public-health pages are only useful if they remain searchable, comparable, and easy to retrieve.",
     contribution:
-      "I contribute development and infrastructure work that improves continuity, retrieval, and usability for preserved pages.",
+      "I contribute development and infrastructure work for search, comparison, and resilient delivery across archived public-health content.",
     stack: ["Web development", "Infrastructure", "Search and comparison"],
     links: [
       { label: "Project site", href: "https://restoredcdc.org" },
@@ -239,46 +283,69 @@ export const featuredProjects: ProjectEntry[] = [
   },
 ];
 
-export const speaking: SpeakingEntry[] = [
+export const researchSection: SectionIntro = {
+  eyebrow: "Research & Communication",
+  title: "Research and teaching.",
+  lede:
+    "Alongside software projects, I work on publication, conference presentation, and applied teaching. That experience shows up directly in how I scope products, explain tradeoffs, and translate complex material for real users.",
+};
+
+export const researchCommunication: ResearchEntry[] = [
   {
-    title: "Medical Devices Education Session",
-    date: "2025",
-    format: "Presenter",
+    title: "Withholding CPR in Canada",
+    date: "2026",
+    format: "Accepted publication, Canadian Journal of General Internal Medicine",
     summary:
-      "Researched, built, and delivered a two-hour educational session covering a broad survey of medical devices for first responders.",
+      "Co-authored a medico-legal review on withholding CPR in Canada, synthesizing case law and medical-college policies into a practical account of the standard of care.",
   },
   {
-    title: "Withholding CPR research presentation",
+    title: "Withholding CPR conference presentation",
     date: "2025",
-    format: "Conference presentation",
+    format: "Canadian Conference on Physician Health",
     summary:
-      "Prepared an oral presentation translating a legal and policy research project into a practical account of the standard of care in medicine.",
+      "Prepared and delivered a conference presentation in Vancouver translating the same research into a medicine-facing oral presentation.",
+  },
+  {
+    title: "Medical devices education session",
+    date: "2025",
+    format: "Presenter, St. John Ambulance training context",
+    summary:
+      "Researched and delivered a two-hour teaching session on 50-plus medical devices, focused on recognition and responder interaction.",
   },
 ];
+
+export const contactSection: SectionIntro = {
+  eyebrow: "Contact",
+  title: "Get in touch.",
+  lede:
+    "Email is the best path for roles, collaboration, or research-adjacent work. GitHub and current project links are below.",
+};
 
 export const contactLinks: SocialLink[] = [
   {
     label: "Email",
     value: "jeremyjdawson@gmail.com",
     href: "mailto:jeremyjdawson@gmail.com",
-    detail: "Best for direct contact about projects, collaboration, or roles.",
+    detail: "Best for roles, research, collaboration, and direct contact.",
   },
   {
     label: "GitHub",
     value: "github.com/jerdaw",
     href: "https://github.com/jerdaw",
-    detail: "Code, project repos, and documentation-heavy build work.",
+    detail: "Code, project history, and build documentation.",
+  },
+  {
+    label: "Wait Time Canada",
+    value: "wait-time.ca",
+    href: "https://wait-time.ca",
+    detail: "Emergency department wait-time methodology and public health-data analysis.",
   },
   {
     label: "HelpBridge",
     value: "helpbridge.ca",
     href: "https://helpbridge.ca",
-    detail: "Live public-interest service directory work based in Kingston.",
-  },
-  {
-    label: "VisitBrief",
-    value: "visitbrief.com",
-    href: "https://visitbrief.com",
-    detail: "Live visit-preparation product focused on clarity and safety boundaries.",
+    detail: "Verified service-search work focused on access, trust, and local usefulness.",
   },
 ];
+
+export const footerText = "Jeremy Dawson. Software, research, and public-interest systems.";
