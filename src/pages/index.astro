@@ -2,7 +2,6 @@
 import Enhancements from "../components/Enhancements.astro";
 import ExperienceTimeline from "../components/ExperienceTimeline.astro";
 import ProjectCards from "../components/ProjectCards.astro";
-import SignalField from "../components/SignalField.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import {
   about,
@@ -60,8 +59,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             ))}
           </dl>
         </div>
-
-        <SignalField />
       </section>
 
       <section class="section" id="about" data-section="about">
@@ -84,16 +81,13 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       </section>
 
       <section class="section" id="experience" data-section="experience">
-        <div class="experience-shell">
-          <aside class="experience-shell__aside observe" data-reveal>
-            <div class="experience-shell__panel">
-              <p class="section__eyebrow">{experienceSection.eyebrow}</p>
-              <h2 class="section__title">{experienceSection.title}</h2>
-              <p class="section__lede">{experienceSection.lede}</p>
-              <div class="experience-shell__rail" aria-hidden="true"></div>
-            </div>
-          </aside>
+        <div class="observe" data-reveal>
+          <p class="section__eyebrow">{experienceSection.eyebrow}</p>
+          <h2 class="section__title">{experienceSection.title}</h2>
+          <p class="section__lede">{experienceSection.lede}</p>
+        </div>
 
+        <div class="experience-shell">
           <ExperienceTimeline entries={experience} />
         </div>
       </section>

@@ -44,21 +44,8 @@ const setActiveSection = () => {
   root.dataset.activeSection = activeSection;
 };
 
-const setScrollProgress = () => {
-  const main = document.querySelector("[data-scroll-root]");
-  if (!main) return;
-
-  const rect = main.getBoundingClientRect();
-  const total = rect.height - window.innerHeight;
-  const progressed = Math.min(Math.max(-rect.top, 0), Math.max(total, 1));
-  const percentage = total > 0 ? progressed / total : 0;
-
-  root.style.setProperty("--scroll-progress", percentage.toFixed(3));
-};
-
 const onScroll = () => {
   setActiveSection();
-  setScrollProgress();
 };
 
 onScroll();
