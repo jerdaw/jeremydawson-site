@@ -373,15 +373,7 @@ html[data-active-section="contact"] [data-nav-link="contact"] {
   padding-left: 2.5rem;
 }
 
-.timeline::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--accent);
-}
+/* Vertical line removed — SVG path handles this now */
 
 .timeline__entry {
   position: relative;
@@ -399,11 +391,41 @@ html[data-active-section="contact"] [data-nav-link="contact"] {
   position: absolute;
   left: -2.5rem;
   top: 2.5rem;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
   background: var(--accent);
-  transform: translateX(-5px);
+  transform: translateX(-5px) rotate(45deg);
+  box-shadow:
+    0 0 0 3px var(--bg),
+    0 0 12px rgba(5, 108, 242, 0.5);
+  transition:
+    transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 500ms ease;
+}
+
+html[data-enhanced="true"] .timeline__entry.is-visible::before {
+  transform: translateX(-5px) rotate(45deg) scale(1.3);
+  box-shadow:
+    0 0 0 3px var(--bg),
+    0 0 20px rgba(5, 108, 242, 0.7);
+}
+
+.timeline__entry::after {
+  content: "";
+  position: absolute;
+  left: -2.5rem;
+  top: calc(2.5rem + 4px);
+  width: 1.5rem;
+  height: 1px;
+  background: linear-gradient(to right, rgba(5, 108, 242, 0.5), transparent);
+  transform: translateX(8px);
+  opacity: 0;
+  transition: opacity 600ms ease 200ms;
+}
+
+html[data-enhanced="true"] .timeline__entry.is-visible::after {
+  opacity: 1;
 }
 
 .timeline__meta {
@@ -734,15 +756,73 @@ html[data-active-section="contact"] [data-nav-link="contact"] {
 }
 
 .timeline-path__track {
-  stroke: rgba(5, 108, 242, 0.12);
+  stroke: rgba(5, 108, 242, 0.08);
   stroke-width: 2;
 }
 
 .timeline-path__draw {
-  stroke: #056CF2;
-  stroke-width: 2.5;
+  stroke: url(#path-gradient);
+  stroke-width: var(--path-width, 2.5);
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.timeline-path__ghost {
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.timeline-path__branch {
+  stroke: rgba(5, 108, 242, 0.25);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  fill: none;
+  filter: url(#filament-glow);
+}
+
+.timeline-path__split {
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  fill: none;
+  filter: url(#filament-glow);
+  opacity: 0;
+}
+
+.timeline-path__fan {
+  stroke-width: 2;
+  stroke-linecap: round;
+  fill: none;
+  filter: url(#filament-glow);
+  opacity: 0;
+}
+
+.section-node__ring {
+  fill: none;
+  stroke-width: 1.5;
+  opacity: 0;
+}
+
+.section-node__dot {
+  opacity: 0;
+}
+
+#leading-dot {
+  transition: opacity 300ms ease;
+}
+
+#terminus-orb {
+  transition: opacity 400ms ease;
+}
+
+@keyframes dot-pulse {
+  0%, 100% { opacity: 0.85; r: 5; }
+  50% { opacity: 1; r: 7; }
+}
+
+@keyframes node-pulse {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.35; }
 }
 
 /* ── Reveal animations ──────────────────────────────── */

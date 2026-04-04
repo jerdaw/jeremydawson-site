@@ -17,17 +17,92 @@
         <feMergeNode in="SourceGraphic" />
       </feMerge>
     </filter>
+
+    <filter id="leading-glow" x="-200%" y="-200%" width="500%" height="500%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="filament-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="node-glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <linearGradient id="path-gradient" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="1000">
+      <stop offset="0%" stop-color="#61a4fc" />
+      <stop offset="50%" stop-color="#056CF2" />
+      <stop offset="100%" stop-color="#0455C2" />
+    </linearGradient>
+
+    <radialGradient id="terminus-gradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#67E8F9" stop-opacity="0.9" />
+      <stop offset="50%" stop-color="#61a4fc" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#61a4fc" stop-opacity="0" />
+    </radialGradient>
   </defs>
 
+  <!-- Faint background track -->
   <path
     id="timeline-track"
     class="timeline-path__track"
     fill="none"
   />
+
+  <!-- Ghost/echo paths -->
+  <g id="ghost-paths"></g>
+
+  <!-- Split paths (About section parallel lines) -->
+  <g id="split-paths"></g>
+
+  <!-- Fan-out paths (Projects section branches) -->
+  <g id="fan-paths"></g>
+
+  <!-- Main animated draw path -->
   <path
     id="timeline-draw"
     class="timeline-path__draw"
     fill="none"
+    stroke="url(#path-gradient)"
     filter="url(#path-glow)"
+  />
+
+  <!-- Branch filaments at nodes -->
+  <g id="branch-paths"></g>
+
+  <!-- Section transition nodes -->
+  <g id="section-nodes"></g>
+
+  <!-- Terminus orb -->
+  <circle
+    id="terminus-orb"
+    r="0"
+    fill="url(#terminus-gradient)"
+    filter="url(#node-glow)"
+    opacity="0"
+  />
+
+  <!-- Leading-edge dot -->
+  <circle
+    id="leading-dot"
+    r="6"
+    fill="#61a4fc"
+    filter="url(#leading-glow)"
+    opacity="0"
   />
 </svg>

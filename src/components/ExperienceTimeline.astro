@@ -10,7 +10,7 @@ const { entries } = Astro.props;
 
 <div class="timeline">
   {entries.map((entry, index) => (
-    <article class="timeline__entry observe" data-reveal style={`--entry-index:${index};`}>
+    <article class="timeline__entry observe" data-reveal data-entry-index={index} style={`--entry-index:${index};`}>
       <div class="timeline__meta">
         <p class="timeline__date">{entry.dateRange}</p>
         <p class="timeline__location">{entry.location}</p>
