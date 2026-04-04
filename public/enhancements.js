@@ -16,7 +16,7 @@ if (!reduceMotion) {
       }
     },
     {
-      threshold: 0.15,
+      threshold: 0.08,
       rootMargin: "0px 0px -10% 0px",
     },
   );
@@ -44,13 +44,111 @@ const setActiveSection = () => {
   root.dataset.activeSection = activeSection;
 };
 
+// ── Timeline path ─────────────────────────────────────
+
+const svg = document.getElementById("timeline-path-svg");
+const trackPath = document.getElementById("timeline-track");
+const drawPath = document.getElementById("timeline-draw");
+
+function buildTimelinePath() {
+  if (
+    !(svg instanceof SVGSVGElement) ||
+    !(trackPath instanceof SVGPathElement) ||
+    !(drawPath instanceof SVGPathElement)
+  ) {
+    return 0;
+  }
+
+  const docHeight = document.documentElement.scrollHeight;
+  svg.style.height = docHeight + "px";
+
+  const W = window.innerWidth;
+  const maxW = 1100;
+  const padding = 32;
+  const colW = Math.min(W - padding, maxW);
+  const leftMargin = (W - colW) / 2;
+
+  const cx = leftMargin + colW * 0.5;
+  const leftX = leftMargin + colW * 0.18;
+  const rightX = leftMargin + colW * 0.82;
+
+  const waypoints = [[cx, 0]];
+  let goLeft = true;
+
+  for (const section of sections) {
+    const rect = section.getBoundingClientRect();
+    const top = rect.top + window.scrollY;
+    const height = rect.height;
+    const mid = top + height * 0.5;
+    const bottom = top + height;
+
+    waypoints.push([goLeft ? leftX : rightX, mid]);
+    waypoints.push([cx, bottom]);
+    goLeft = !goLeft;
+  }
+
+  let d = `M ${waypoints[0][0]},${waypoints[0][1]}`;
+
+  for (let i = 1; i < waypoints.length; i++) {
+    const [px, py] = waypoints[i - 1];
+    const [cx2, cy] = waypoints[i];
+    const dy = cy - py;
+    d += ` C ${px},${py + dy * 0.5} ${cx2},${cy - dy * 0.5} ${cx2},${cy}`;
+  }
+
+  trackPath.setAttribute("d", d);
+  drawPath.setAttribute("d", d);
+
+  const length = drawPath.getTotalLength();
+  drawPath.style.strokeDasharray = String(length);
+  drawPath.style.strokeDashoffset = String(length);
+
+  return length;
+}
+
+let pathLength = 0;
+
+function animateTimelinePath() {
+  if (pathLength === 0 || reduceMotion) return;
+  if (!(drawPath instanceof SVGPathElement)) return;
+
+  const docH = document.documentElement.scrollHeight;
+  const winH = window.innerHeight;
+  const progress = window.scrollY / Math.max(docH - winH, 1);
+  drawPath.style.strokeDashoffset = String(pathLength * (1 - progress));
+}
+
+let resizeTimer = -1;
+
+function onResize() {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    pathLength = buildTimelinePath();
+    animateTimelinePath();
+    setActiveSection();
+  }, 150);
+}
+
 const onScroll = () => {
   setActiveSection();
+  animateTimelinePath();
 };
 
+pathLength = buildTimelinePath();
 onScroll();
+
 window.addEventListener("scroll", onScroll, { passive: true });
-window.addEventListener("resize", onScroll);
+window.addEventListener("resize", onResize);
+
+// Re-run after fonts load in case reflow shifts section positions
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(() => {
+    pathLength = buildTimelinePath();
+    animateTimelinePath();
+  });
+}
+
+// ── Email reveal ──────────────────────────────────────
 
 const emailCard = document.querySelector("[data-email-card]");
 

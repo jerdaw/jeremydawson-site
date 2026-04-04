@@ -185,7 +185,7 @@ html[data-active-section="contact"] [data-nav-link="contact"] {
 
 .section__title {
   font-family: "Montserrat", sans-serif;
-  font-size: clamp(2.2rem, 5vw, 4rem);
+  font-size: clamp(2.5rem, 6vw, 5rem);
   font-weight: 700;
   line-height: 1.05;
   letter-spacing: -0.03em;
@@ -215,7 +215,7 @@ html[data-active-section="contact"] [data-nav-link="contact"] {
   justify-content: center;
   text-align: center;
   min-height: 100vh;
-  padding: 6rem 2rem;
+  padding: 9rem 2rem 6rem;
 }
 
 .hero__copy {
@@ -236,17 +236,17 @@ html[data-active-section="contact"] [data-nav-link="contact"] {
   margin-top: 1.25rem;
   max-width: 16ch;
   font-family: "Montserrat", sans-serif;
-  font-size: clamp(3rem, 8vw, 6rem);
+  font-size: clamp(4rem, 11vw, 7rem);
   font-weight: 700;
   line-height: 1.05;
   letter-spacing: -0.03em;
 }
 
 .hero__intro {
-  max-width: 36rem;
+  max-width: 42rem;
   margin: 1.5rem auto 0;
   color: var(--muted-dark);
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   line-height: 1.8;
   font-weight: 300;
 }
@@ -721,19 +721,54 @@ html[data-active-section="contact"] [data-nav-link="contact"] {
   background: var(--bg);
 }
 
+/* ── Timeline path SVG ──────────────────────────────── */
+
+.timeline-path {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 2;
+}
+
+.timeline-path__track {
+  stroke: rgba(5, 108, 242, 0.12);
+  stroke-width: 2;
+}
+
+.timeline-path__draw {
+  stroke: #056CF2;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 /* ── Reveal animations ──────────────────────────────── */
 
 html[data-enhanced="true"] .observe {
   opacity: 0;
-  transform: translateY(26px);
+  transform: translateY(44px);
   transition:
-    opacity 560ms ease,
-    transform 560ms ease;
-  transition-delay: calc(var(--entry-index, var(--card-index, 0)) * 70ms);
+    opacity 700ms ease,
+    transform 700ms ease;
+  transition-delay: calc(
+    var(--reveal-delay, 0ms) +
+    var(--entry-index, var(--card-index, 0)) * 70ms
+  );
 }
 
 html[data-enhanced="true"] .observe.is-visible {
   opacity: 1;
+  transform: translateY(0);
+}
+
+html[data-enhanced="true"] .section__title.observe {
+  transform: translateY(60px);
+}
+
+html[data-enhanced="true"] .section__title.observe.is-visible {
   transform: translateY(0);
 }
 
@@ -772,7 +807,7 @@ html[data-enhanced="true"] .observe.is-visible {
   }
 
   .hero__title {
-    font-size: clamp(2.5rem, 12vw, 4rem);
+    font-size: clamp(2.8rem, 13vw, 4.5rem);
   }
 
   .timeline__entry {

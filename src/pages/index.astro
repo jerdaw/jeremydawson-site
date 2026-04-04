@@ -3,6 +3,7 @@ import Enhancements from "../components/Enhancements.astro";
 import ExperienceTimeline from "../components/ExperienceTimeline.astro";
 import ProjectCards from "../components/ProjectCards.astro";
 import SiteHeader from "../components/SiteHeader.astro";
+import TimelinePath from "../components/TimelinePath.astro";
 import {
   about,
   contactLinks,
@@ -32,6 +33,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   imageHeight={siteMeta.socialImage.height}
 >
   <div class="site-shell">
+    <TimelinePath />
     <SiteHeader navLinks={navLinks} />
 
     <main data-scroll-root>
@@ -62,9 +64,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       </section>
 
       <section class="section" id="about" data-section="about">
-        <p class="section__eyebrow">{about.eyebrow}</p>
+        <p class="section__eyebrow observe" data-reveal style="--reveal-delay: 0ms">{about.eyebrow}</p>
         <div class="about">
-          <div class="about__body observe" data-reveal>
+          <div class="about__body observe" data-reveal style="--reveal-delay: 100ms">
             <h2 class="section__title">{about.title}</h2>
             <p class="about__lead">{about.lead}</p>
             {about.body.map((paragraph) => (
@@ -72,7 +74,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             ))}
           </div>
 
-          <ul class="about__principles observe" data-reveal aria-label="Working principles">
+          <ul class="about__principles observe" data-reveal aria-label="Working principles" style="--reveal-delay: 200ms">
             {about.principles.map((principle) => (
               <li>{principle}</li>
             ))}
@@ -81,11 +83,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       </section>
 
       <section class="section" id="experience" data-section="experience">
-        <div class="observe" data-reveal>
-          <p class="section__eyebrow">{experienceSection.eyebrow}</p>
-          <h2 class="section__title">{experienceSection.title}</h2>
-          <p class="section__lede">{experienceSection.lede}</p>
-        </div>
+        <p class="section__eyebrow observe" data-reveal style="--reveal-delay: 0ms">{experienceSection.eyebrow}</p>
+        <h2 class="section__title observe" data-reveal style="--reveal-delay: 100ms">{experienceSection.title}</h2>
+        <p class="section__lede observe" data-reveal style="--reveal-delay: 200ms">{experienceSection.lede}</p>
 
         <div class="experience-shell">
           <ExperienceTimeline entries={experience} />
@@ -93,9 +93,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       </section>
 
       <section class="section" id="projects" data-section="projects">
-        <p class="section__eyebrow">{projectsSection.eyebrow}</p>
-        <h2 class="section__title">{projectsSection.title}</h2>
-        <p class="section__lede">{projectsSection.lede}</p>
+        <p class="section__eyebrow observe" data-reveal style="--reveal-delay: 0ms">{projectsSection.eyebrow}</p>
+        <h2 class="section__title observe" data-reveal style="--reveal-delay: 100ms">{projectsSection.title}</h2>
+        <p class="section__lede observe" data-reveal style="--reveal-delay: 200ms">{projectsSection.lede}</p>
 
         <div style="margin-top: 2rem;">
           <ProjectCards projects={featuredProjects} />
@@ -103,9 +103,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       </section>
 
       <section class="section" id="research" data-section="research">
-        <p class="section__eyebrow">{researchSection.eyebrow}</p>
-        <h2 class="section__title">{researchSection.title}</h2>
-        <p class="section__lede">{researchSection.lede}</p>
+        <p class="section__eyebrow observe" data-reveal style="--reveal-delay: 0ms">{researchSection.eyebrow}</p>
+        <h2 class="section__title observe" data-reveal style="--reveal-delay: 100ms">{researchSection.title}</h2>
+        <p class="section__lede observe" data-reveal style="--reveal-delay: 200ms">{researchSection.lede}</p>
 
         <div class="speaking-grid">
           {researchCommunication.map((entry) => (
@@ -121,9 +121,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       </section>
 
       <section class="section" id="contact" data-section="contact">
-        <p class="section__eyebrow">{contactSection.eyebrow}</p>
-        <h2 class="section__title">{contactSection.title}</h2>
-        <p class="section__lede">{contactSection.lede}</p>
+        <p class="section__eyebrow observe" data-reveal style="--reveal-delay: 0ms">{contactSection.eyebrow}</p>
+        <h2 class="section__title observe" data-reveal style="--reveal-delay: 100ms">{contactSection.title}</h2>
+        <p class="section__lede observe" data-reveal style="--reveal-delay: 200ms">{contactSection.lede}</p>
 
         <div class="contact-grid">
           <article class="contact-card contact-card--private observe" data-reveal data-email-card>

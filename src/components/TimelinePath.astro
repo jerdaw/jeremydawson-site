@@ -1,0 +1,33 @@
+---
+// TimelinePath.astro — full-page animated bezier path.
+// All path geometry is computed at runtime in enhancements.js.
+---
+
+<svg
+  class="timeline-path"
+  id="timeline-path-svg"
+  aria-hidden="true"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    <filter id="path-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <path
+    id="timeline-track"
+    class="timeline-path__track"
+    fill="none"
+  />
+  <path
+    id="timeline-draw"
+    class="timeline-path__draw"
+    fill="none"
+    filter="url(#path-glow)"
+  />
+</svg>
