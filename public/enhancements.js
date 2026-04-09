@@ -53,7 +53,10 @@ const ghostGroup = document.getElementById("ghost-paths");
 const branchGroup = document.getElementById("branch-paths");
 const sectionNodesGroup = document.getElementById("section-nodes");
 const splitPathsGroup = document.getElementById("split-paths");
+const portalGroup = document.getElementById("portal-group");
 const fanPathsGroup = document.getElementById("fan-paths");
+const prismGroup = document.getElementById("prism-group");
+const prismPathsGroup = document.getElementById("prism-paths");
 const leadingDot = document.getElementById("leading-dot");
 const terminusOrb = document.getElementById("terminus-orb");
 const pathGradient = document.getElementById("path-gradient");
@@ -69,10 +72,46 @@ let sectionNodeYs = [];
 let splitPathEls = [];
 let splitLengths = [];
 let splitRange = { start: 0, end: 0 };
+let portalEl = null;
+let portalInnerEl = null;
+let portalProgress = 0;
 let fanPathEls = [];
 let fanLengths = [];
 let fanRange = { start: 0, end: 0 };
+let prismBodyEl = null;
+let prismBeamEl = null;
+let prismGlowEl = null;
+let prismEdgeEls = [];
+let prismHighlightEl = null;
+let prismRayEls = [];
+let prismRayLengths = [];
+let prismRange = { start: 0, end: 0, faceY: 0 };
 let terminusProgress = 1;
+
+// Spectral colors for rainbow/prism effects (red→violet dispersion order)
+const SPECTRAL_COLORS = [
+  "#EF4444", "#F97316", "#EAB308", "#22C55E", "#22D3EE", "#A855F7",
+];
+
+// Portal rainbow uses a different ordering for visual balance
+const PORTAL_COLORS = [
+  "#22D3EE", "#A855F7", "#EF4444", "#F97316", "#EAB308", "#22C55E",
+];
+
+function svgEl(tag, attrs, parent) {
+  const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+  if (parent) parent.appendChild(el);
+  return el;
+}
+
+function initDashPath(path, lengthsArray) {
+  const len = path.getTotalLength();
+  lengthsArray.push(len);
+  path.style.strokeDasharray = String(len);
+  path.style.strokeDashoffset = String(len);
+  return len;
+}
 
 // Per-section gradient colors (blue -> cyan -> royal -> indigo -> purple -> lavender -> ice)
 const gradientColors = [
@@ -107,6 +146,13 @@ function buildTimelinePath() {
 
   const docHeight = document.documentElement.scrollHeight;
   svg.style.height = docHeight + "px";
+
+  // Clean up prism mask from previous build
+  drawPath.removeAttribute("mask");
+  const oldMask = document.getElementById("prism-mask");
+  if (oldMask) oldMask.remove();
+  const oldMaskGrad = document.getElementById("prism-mask-gradient");
+  if (oldMaskGrad) oldMaskGrad.remove();
 
   const W = window.innerWidth;
   const maxW = 1100;
@@ -160,10 +206,7 @@ function buildTimelinePath() {
     positions.push(1);
 
     for (let i = 0; i < positions.length && i < gradientColors.length; i++) {
-      const stop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-      stop.setAttribute("offset", String(positions[i]));
-      stop.setAttribute("stop-color", gradientColors[i]);
-      pathGradient.appendChild(stop);
+      svgEl("stop", { offset: positions[i], "stop-color": gradientColors[i] }, pathGradient);
     }
   }
 
@@ -178,21 +221,14 @@ function buildTimelinePath() {
 
     for (let g = 0; g < offsets.length; g++) {
       const ghostWaypoints = waypoints.map(([wx, wy]) => [wx + offsets[g], wy]);
-      const ghostD = buildBezierString(ghostWaypoints);
-
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      path.setAttribute("d", ghostD);
-      path.setAttribute("class", "timeline-path__ghost");
-      path.setAttribute("stroke", "url(#path-gradient)");
-      path.setAttribute("stroke-opacity", String(opacities[g]));
-
-      ghostGroup.appendChild(path);
+      const path = svgEl("path", {
+        d: buildBezierString(ghostWaypoints),
+        class: "timeline-path__ghost",
+        stroke: "url(#path-gradient)",
+        "stroke-opacity": opacities[g],
+      }, ghostGroup);
       ghostPathEls.push(path);
-
-      const gLen = path.getTotalLength();
-      ghostLengths.push(gLen);
-      path.style.strokeDasharray = String(gLen);
-      path.style.strokeDashoffset = String(gLen);
+      initDashPath(path, ghostLengths);
     }
   }
 
@@ -204,30 +240,15 @@ function buildTimelinePath() {
 
     for (let i = 2; i < waypoints.length; i += 2) {
       const [nx, ny] = waypoints[i];
-
-      const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      ring.setAttribute("cx", String(nx));
-      ring.setAttribute("cy", String(ny));
-      ring.setAttribute("r", "0");
-      ring.setAttribute("class", "section-node__ring");
-      ring.setAttribute("stroke", "url(#path-gradient)");
-
-      const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      dot.setAttribute("cx", String(nx));
-      dot.setAttribute("cy", String(ny));
-      dot.setAttribute("r", "0");
-      dot.setAttribute("class", "section-node__dot");
-      dot.setAttribute("fill", "url(#path-gradient)");
-
-      sectionNodesGroup.appendChild(ring);
-      sectionNodesGroup.appendChild(dot);
+      const ring = svgEl("circle", { cx: nx, cy: ny, r: 0, class: "section-node__ring", stroke: "url(#path-gradient)" }, sectionNodesGroup);
+      const dot = svgEl("circle", { cx: nx, cy: ny, r: 0, class: "section-node__dot", fill: "url(#path-gradient)" }, sectionNodesGroup);
 
       sectionNodeEls.push({ ring, dot });
       sectionNodeYs.push(ny / docHeight);
     }
   }
 
-  // ── Split paths (About section — index 1) ─────────
+  // ── Portal + Rainbow split (About section — index 1) ─────────
   if (splitPathsGroup && sectionBounds.length > 1) {
     splitPathsGroup.innerHTML = "";
     splitPathEls = [];
@@ -243,30 +264,25 @@ function buildTimelinePath() {
       end: aboutBottom / docHeight,
     };
 
-    const offsets = [-35, 35];
-    const colors = ["rgba(56, 189, 248, 0.4)", "rgba(129, 140, 248, 0.4)"];
-
-    for (let s = 0; s < offsets.length; s++) {
-      const off = offsets[s];
-      const splitWaypoints = [
+    const LINE_SPACING = 10;
+    for (let s = 0; s < PORTAL_COLORS.length; s++) {
+      const off = (s - (PORTAL_COLORS.length - 1) / 2) * LINE_SPACING;
+      const splitD = buildBezierString([
         [cx, prevBottom],
         [aboutSideX + off, aboutMidY],
         [cx, aboutBottom],
-      ];
-      const splitD = buildBezierString(splitWaypoints);
-
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      path.setAttribute("d", splitD);
-      path.setAttribute("class", "timeline-path__split");
-      path.style.stroke = colors[s];
-
-      splitPathsGroup.appendChild(path);
+      ]);
+      const path = svgEl("path", { d: splitD, class: "timeline-path__rainbow" }, splitPathsGroup);
+      path.style.stroke = PORTAL_COLORS[s];
       splitPathEls.push(path);
+      initDashPath(path, splitLengths);
+    }
 
-      const sLen = path.getTotalLength();
-      splitLengths.push(sLen);
-      path.style.strokeDasharray = String(sLen);
-      path.style.strokeDashoffset = String(sLen);
+    portalProgress = prevBottom / docHeight;
+    if (portalGroup) {
+      portalGroup.innerHTML = "";
+      portalEl = svgEl("ellipse", { cx, cy: prevBottom, rx: 35, ry: 18, class: "portal__ring", filter: "url(#portal-glow)" }, portalGroup);
+      portalInnerEl = svgEl("ellipse", { cx, cy: prevBottom, rx: 25, ry: 12, class: "portal__inner", filter: "url(#portal-glow)" }, portalGroup);
     }
   }
 
@@ -287,34 +303,150 @@ function buildTimelinePath() {
 
     const fanCount = 5;
     const fanColors = [
-      "rgba(99, 102, 241, 0.3)",
-      "rgba(139, 92, 246, 0.3)",
-      "rgba(168, 85, 247, 0.35)",
-      "rgba(139, 92, 246, 0.3)",
-      "rgba(99, 102, 241, 0.3)",
+      "rgba(99, 102, 241, 0.55)",
+      "rgba(139, 92, 246, 0.55)",
+      "rgba(168, 85, 247, 0.6)",
+      "rgba(139, 92, 246, 0.55)",
+      "rgba(99, 102, 241, 0.55)",
     ];
+
+    // Stop at the prism's upper face, not its center
+    const prismFaceOffset = sectionBounds.length > 4 ? 55 * 2 / 3 : 0;
 
     for (let f = 0; f < fanCount; f++) {
       const t = (f / (fanCount - 1)) * 2 - 1; // -1 to 1
-      const endX = cx + t * spread;
+      const peakX = cx + t * spread;
       const midX = cx + t * spread * 0.4;
-      const endY = projStart + (projEnd - projStart) * 0.75;
-      const midY = projStart + (projEnd - projStart) * 0.35;
+      const peakY = projStart + (projEnd - projStart) * 0.55;
+      const midY = projStart + (projEnd - projStart) * 0.3;
+      const endY = projEnd - prismFaceOffset;
 
-      const fanD = `M ${cx},${projStart} C ${midX},${midY} ${endX},${midY + 60} ${endX},${endY}`;
-
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      path.setAttribute("d", fanD);
-      path.setAttribute("class", "timeline-path__fan");
+      const fanD = `M ${cx},${projStart} C ${midX},${midY} ${peakX},${midY + 60} ${peakX},${peakY} C ${peakX},${peakY + (endY - peakY) * 0.5} ${cx},${endY - (endY - peakY) * 0.2} ${cx},${endY}`;
+      const path = svgEl("path", { d: fanD, class: "timeline-path__fan" }, fanPathsGroup);
       path.style.stroke = fanColors[f];
-
-      fanPathsGroup.appendChild(path);
       fanPathEls.push(path);
+      initDashPath(path, fanLengths);
+    }
+  }
 
-      const fLen = path.getTotalLength();
-      fanLengths.push(fLen);
-      path.style.strokeDasharray = String(fLen);
-      path.style.strokeDashoffset = String(fLen);
+  // ── Prism refraction (Research section — index 4) ──
+  //
+  // Physics model (simplified DSOTM):
+  //   - The main line comes down vertically. We treat it as "white light".
+  //   - It enters the top-left face of the prism.
+  //   - Inside, refraction disperses the wavelengths.
+  //   - Rays exit through the bottom-left face, with red bending least
+  //     (closest to straight-through) and violet bending most.
+  //   - Color order from least to most refraction:
+  //     Red → Orange → Yellow → Green → Cyan → Violet
+  //
+  if (prismGroup && prismPathsGroup && sectionBounds.length > 4) {
+    prismGroup.innerHTML = "";
+    prismPathsGroup.innerHTML = "";
+    prismRayEls = [];
+    prismRayLengths = [];
+    prismEdgeEls = [];
+
+    const prismCy = sectionBounds[3].bottom;
+    const prismSize = 55;
+    const triHalfBase = (prismSize * 2) / Math.sqrt(3);
+
+    // Apex on left, right face vertical. The beam enters the upper-left
+    // face and exits the lower-left face — just like DSOTM album art.
+    const apexLeft = [cx - triHalfBase, prismCy];
+    const topRight = [cx + triHalfBase * 0.5, prismCy - prismSize];
+    const bottomRight = [cx + triHalfBase * 0.5, prismCy + prismSize];
+
+    const triPoints = `${apexLeft[0]},${apexLeft[1]} ${topRight[0]},${topRight[1]} ${bottomRight[0]},${bottomRight[1]}`;
+
+    // Glow layer behind body (pulses when beam hits)
+    prismGlowEl = svgEl("polygon", { points: triPoints, class: "prism__glow", filter: "url(#prism-glow)" }, prismGroup);
+    prismBodyEl = svgEl("polygon", { points: triPoints, class: "prism__body" }, prismGroup);
+
+    // Bright edges
+    prismEdgeEls = [[apexLeft, topRight], [apexLeft, bottomRight], [topRight, bottomRight]].map(
+      ([p1, p2]) => svgEl("line", { x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1], class: "prism__edge" }, prismGroup)
+    );
+
+    // Internal highlight (suggests refraction path)
+    prismHighlightEl = svgEl("line", {
+      x1: cx, y1: prismCy - prismSize * 0.35,
+      x2: cx - triHalfBase * 0.35, y2: prismCy + prismSize * 0.35,
+      class: "prism__highlight",
+    }, prismGroup);
+
+    // Entry point: where x=cx meets the upper-left face (apexLeft→topRight)
+    const entryFrac = (cx - apexLeft[0]) / (topRight[0] - apexLeft[0]);
+    const entryY = apexLeft[1] + (topRight[1] - apexLeft[1]) * entryFrac;
+    const entryPoint = [cx, entryY];
+
+    prismBeamEl = null;
+
+    const researchMidY = sectionBounds[4].mid;
+    const researchBottom = sectionBounds[4].bottom;
+    const researchSideX = sectionBounds[4].sideX;
+
+    prismRange = {
+      start: prismCy / docHeight,
+      end: researchBottom / docHeight,
+      faceY: entryY,
+    };
+
+    // Red exits near apex (least deviation), violet near bottomRight (most)
+    const spreadRange = Math.abs(cx - researchSideX);
+    const convergeY = researchBottom;
+
+    for (let r = 0; r < SPECTRAL_COLORS.length; r++) {
+      const t = r / (SPECTRAL_COLORS.length - 1); // 0=red (least bent), 1=violet (most)
+
+      const exitFrac = 0.3 + t * 0.5;
+      const exitX = apexLeft[0] + (bottomRight[0] - apexLeft[0]) * exitFrac;
+      const exitY = apexLeft[1] + (bottomRight[1] - apexLeft[1]) * exitFrac;
+
+      const midX = cx - t * spreadRange * 0.6;
+      const midY = researchMidY;
+      const totalHeight = convergeY - prismCy;
+
+      const rayD = `M ${entryPoint[0]},${entryPoint[1]} C ${exitX},${exitY} ${exitX + (midX - exitX) * 0.5},${exitY + totalHeight * 0.15} ${midX},${midY} C ${midX},${midY + totalHeight * 0.15} ${cx},${convergeY - totalHeight * 0.15} ${cx},${convergeY}`;
+
+      const path = svgEl("path", { d: rayD, class: "timeline-path__prism-ray" }, prismPathsGroup);
+      path.style.stroke = SPECTRAL_COLORS[r];
+      prismRayEls.push(path);
+      initDashPath(path, prismRayLengths);
+    }
+
+    // SVG mask: hide main draw path through prism section.
+    // Fade starts well above the prism so the gradient-colored line
+    // disappears before the white beam takes over — no purple leaking.
+    // Bottom: main line reappears where spectral rays converge.
+    const maskRevealY = convergeY;
+
+    const defs = svg.querySelector("defs");
+
+    const maskGrad = svgEl("linearGradient", {
+      id: "prism-mask-gradient",
+      gradientUnits: "userSpaceOnUse",
+      x1: 0, y1: 0, x2: 0, y2: docHeight,
+    }, defs);
+
+    const maskStops = [
+      [0, "white"],
+      [(prismCy - prismSize * 4.5) / docHeight, "white"],
+      [(prismCy - prismSize * 2) / docHeight, "black"],
+      [(maskRevealY - 60) / docHeight, "black"],
+      [(maskRevealY + 30) / docHeight, "white"],
+      [1, "white"],
+    ];
+    for (const [offset, color] of maskStops) {
+      svgEl("stop", { offset, "stop-color": color }, maskGrad);
+    }
+
+    const mask = svgEl("mask", { id: "prism-mask" }, defs);
+    svgEl("rect", { x: 0, y: 0, width: "100%", height: docHeight, fill: "url(#prism-mask-gradient)" }, mask);
+
+    drawPath.setAttribute("mask", "url(#prism-mask)");
+    for (const gp of ghostPathEls) {
+      gp.setAttribute("mask", "url(#prism-mask)");
     }
   }
 
@@ -347,19 +479,9 @@ function buildTimelinePath() {
       const ctrlX = startX + branchDir * 30;
 
       const bD = `M ${startX},${entryY} C ${ctrlX},${entryY - 15} ${endX},${entryY - 8} ${endX},${entryY + 5}`;
-
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      path.setAttribute("d", bD);
-      path.setAttribute("class", "timeline-path__branch");
-
-      branchGroup.appendChild(path);
+      const path = svgEl("path", { d: bD, class: "timeline-path__branch" }, branchGroup);
       branchPathEls.push(path);
-
-      const bLen = path.getTotalLength();
-      branchLengths.push(bLen);
-      path.style.strokeDasharray = String(bLen);
-      path.style.strokeDashoffset = String(bLen);
-
+      initDashPath(path, branchLengths);
       branchThresholds.push(entryY / docHeight);
     });
   }
@@ -398,10 +520,17 @@ function animateTimelinePath() {
   // ── Leading-edge dot ──
   if (leadingDot && progress > 0.005 && progress < 0.995) {
     const point = drawPath.getPointAtLength(pathLength * progress);
-    leadingDot.setAttribute("cx", String(point.x));
-    leadingDot.setAttribute("cy", String(point.y));
-    leadingDot.setAttribute("opacity", "1");
-    leadingDot.setAttribute("r", String(4 + easedProgress * 5));
+    // Hide when dot reaches the prism face (Y-based, avoids arc-length mismatch)
+    const inPrism = prismRange.faceY > 0 &&
+      point.y >= prismRange.faceY - 30 && progress <= prismRange.end + 0.02;
+    if (inPrism) {
+      leadingDot.setAttribute("opacity", "0");
+    } else {
+      leadingDot.setAttribute("cx", String(point.x));
+      leadingDot.setAttribute("cy", String(point.y));
+      leadingDot.setAttribute("opacity", "1");
+      leadingDot.setAttribute("r", String(4 + easedProgress * 5));
+    }
   } else if (leadingDot) {
     leadingDot.setAttribute("opacity", "0");
   }
@@ -425,18 +554,57 @@ function animateTimelinePath() {
     }
   }
 
-  // ── Split paths (About section) ──
+  // ── Portal gateway ──
+  if (portalEl && portalInnerEl) {
+    if (progress >= portalProgress - 0.03 && progress <= splitRange.end + 0.05) {
+      const portalEntry = (progress - portalProgress + 0.03) / 0.06;
+      const portalVis = Math.min(1, Math.max(0, portalEntry));
+      const scale = 1 - Math.pow(1 - portalVis, 3);
+
+      const sp = splitRange.end > splitRange.start
+        ? (progress - splitRange.start) / (splitRange.end - splitRange.start)
+        : 0;
+      const fadeOut = sp > 0.85 ? Math.max(0, 1 - (sp - 0.85) / 0.15) : 1;
+
+      let outerRx = 35 * scale;
+      let innerRx = 25 * scale;
+      if (portalVis >= 1 && fadeOut > 0.5) {
+        const pulse = Math.sin(Date.now() / 400) * 2;
+        outerRx += pulse;
+        innerRx += pulse * 0.6;
+      }
+
+      portalEl.setAttribute("rx", String(outerRx));
+      portalEl.setAttribute("ry", String(18 * scale));
+      portalEl.setAttribute("opacity", String(portalVis * fadeOut));
+      portalInnerEl.setAttribute("rx", String(innerRx));
+      portalInnerEl.setAttribute("ry", String(12 * scale));
+      portalInnerEl.setAttribute("opacity", String(portalVis * fadeOut * 0.8));
+    } else {
+      portalEl.setAttribute("opacity", "0");
+      portalInnerEl.setAttribute("opacity", "0");
+    }
+  }
+
+  // ── Rainbow split paths (About section) ──
   if (splitRange.end > splitRange.start) {
     for (let s = 0; s < splitPathEls.length; s++) {
       if (progress >= splitRange.start && progress <= splitRange.end + 0.05) {
-        const sp = (progress - splitRange.start) / (splitRange.end - splitRange.start);
-        const clamped = Math.min(1, sp);
+        const range = splitRange.end - splitRange.start;
+        const sp = (progress - splitRange.start) / range;
+
+        // Staggered emergence: each line starts slightly after the previous
+        const stagger = s * 0.02;
+        const adjusted = Math.max(0, sp - stagger);
+        const clamped = Math.min(1, adjusted / (1 - stagger));
         const eased = 1 - Math.pow(1 - clamped, 2);
+
         splitPathEls[s].style.strokeDashoffset = String(
           splitLengths[s] * (1 - eased),
         );
-        const fadeIn = Math.min(1, sp * 4);
-        const fadeOut = sp > 0.8 ? Math.max(0, 1 - (sp - 0.8) / 0.25) : 1;
+
+        const fadeIn = Math.min(1, adjusted * 6);
+        const fadeOut = sp > 0.80 ? Math.max(0, 1 - (sp - 0.80) / 0.20) : 1;
         splitPathEls[s].style.opacity = String(Math.max(0, fadeIn * fadeOut));
       } else {
         splitPathEls[s].style.strokeDashoffset = String(splitLengths[s]);
@@ -445,23 +613,103 @@ function animateTimelinePath() {
     }
   }
 
-  // ── Fan-out paths (Projects section) ──
+  // ── Fan-out paths (Projects section → converge at prism) ──
   if (fanRange.end > fanRange.start) {
     for (let f = 0; f < fanPathEls.length; f++) {
       if (progress >= fanRange.start) {
         const fp = (progress - fanRange.start) / (fanRange.end - fanRange.start);
-        const stagger = f * 0.04;
-        const adjusted = Math.max(0, Math.min(1, (fp - stagger) / (0.7 - stagger)));
-        const eased = 1 - Math.pow(1 - adjusted, 2);
+        const clamped = Math.min(1, fp);
+        const eased = 1 - Math.pow(1 - clamped, 2);
         fanPathEls[f].style.strokeDashoffset = String(
           fanLengths[f] * (1 - eased),
         );
-        const fadeIn = Math.min(1, Math.max(0, fp - stagger) * 5);
-        const fadeOut = fp > 0.85 ? 1 - (fp - 0.85) / 0.15 : 1;
+        const fadeIn = Math.min(1, fp * 5);
+        // Linger after convergence, then fade
+        const fadeOut = fp > 1.2 ? Math.max(0, 1 - (fp - 1.2) / 0.15) : 1;
         fanPathEls[f].style.opacity = String(Math.max(0, fadeIn * fadeOut));
       } else {
         fanPathEls[f].style.strokeDashoffset = String(fanLengths[f]);
         fanPathEls[f].style.opacity = "0";
+      }
+    }
+  }
+
+  // ── Prism refraction (Research section) ──
+  if (prismRange.end > prismRange.start) {
+    // Prism body + beam + glow visibility
+    if (prismBodyEl) {
+      const ps = prismRange.start;
+      if (progress >= ps - 0.08 && progress <= prismRange.end + 0.08) {
+        // Beam fades in early and smoothly
+        const beamEntry = (progress - ps + 0.08) / 0.05;
+        const beamVis = Math.min(1, Math.max(0, beamEntry));
+
+        // Prism body appears when beam is close
+        const prismEntry = (progress - ps + 0.03) / 0.04;
+        const prismVis = Math.min(1, Math.max(0, prismEntry));
+
+        const sectionP = (progress - ps) / (prismRange.end - ps);
+        const fadeOut = sectionP > 0.90 ? Math.max(0, 1 - (sectionP - 0.90) / 0.15) : 1;
+        const opacity = prismVis * fadeOut;
+
+        // Momentary flash when fan paths converge on the prism
+        const impactDelta = progress - ps;
+        let flash = 0;
+        if (impactDelta >= -0.005 && impactDelta < 0.04) {
+          const t = impactDelta < 0
+            ? (impactDelta + 0.005) / 0.005
+            : Math.max(0, 1 - impactDelta / 0.03);
+          flash = t * t;
+        }
+
+        prismBodyEl.style.opacity = String(Math.min(1, opacity + flash * 0.4));
+        for (const edge of prismEdgeEls) {
+          edge.style.opacity = String(Math.min(1, opacity * 0.8 + flash * 0.5));
+        }
+        if (prismHighlightEl) {
+          const shimmer = 0.15 + Math.sin(Date.now() / 600) * 0.05;
+          prismHighlightEl.style.opacity = String(Math.min(1, opacity * shimmer / 0.2 + flash * 0.6));
+        }
+        if (prismBeamEl) {
+          prismBeamEl.style.opacity = String(Math.min(1, beamVis * fadeOut + flash * 0.3));
+        }
+
+        // Inner glow: momentary flash at impact, then gone
+        if (prismGlowEl) {
+          prismGlowEl.style.opacity = String(flash * fadeOut);
+        }
+      } else {
+        prismBodyEl.style.opacity = "0";
+        for (const edge of prismEdgeEls) edge.style.opacity = "0";
+        if (prismHighlightEl) prismHighlightEl.style.opacity = "0";
+        if (prismBeamEl) prismBeamEl.style.opacity = "0";
+        if (prismGlowEl) prismGlowEl.style.opacity = "0";
+      }
+    }
+
+    // Rainbow ray paths — persist well into the Contact section
+    for (let r = 0; r < prismRayEls.length; r++) {
+      if (progress >= prismRange.start && progress <= prismRange.end + 0.25) {
+        const range = prismRange.end - prismRange.start;
+        const rp = (progress - prismRange.start) / range;
+
+        const stagger = r * 0.025;
+        const adjusted = Math.max(0, rp - stagger);
+        const clamped = Math.min(1, adjusted / (1 - stagger));
+        const eased = 1 - Math.pow(1 - clamped, 2);
+
+        prismRayEls[r].style.strokeDashoffset = String(
+          prismRayLengths[r] * (1 - eased),
+        );
+
+        const fadeIn = Math.min(1, adjusted * 5);
+        // After convergence, stay visible while convergence point is on screen,
+        // then fade as user scrolls past it
+        const fadeOut = rp > 1.3 ? Math.max(0, 1 - (rp - 1.3) / 0.65) : 1;
+        prismRayEls[r].style.opacity = String(Math.max(0, fadeIn * fadeOut));
+      } else {
+        prismRayEls[r].style.strokeDashoffset = String(prismRayLengths[r]);
+        prismRayEls[r].style.opacity = "0";
       }
     }
   }
@@ -503,9 +751,15 @@ function onResize() {
   }, 150);
 }
 
+let scrollRafId = 0;
 const onScroll = () => {
-  setActiveSection();
-  animateTimelinePath();
+  if (!scrollRafId) {
+    scrollRafId = requestAnimationFrame(() => {
+      scrollRafId = 0;
+      setActiveSection();
+      animateTimelinePath();
+    });
+  }
 };
 
 // Reduced-motion fallback: show everything static
@@ -522,9 +776,23 @@ if (reduceMotion) {
     sp.style.strokeDashoffset = "0";
     sp.style.opacity = "1";
   }
+  if (portalEl) {
+    portalEl.setAttribute("opacity", "0.6");
+  }
+  if (portalInnerEl) {
+    portalInnerEl.setAttribute("opacity", "0.5");
+  }
   for (const fp of fanPathEls) {
     fp.style.strokeDashoffset = "0";
     fp.style.opacity = "1";
+  }
+  if (prismBodyEl) prismBodyEl.style.opacity = "0.6";
+  for (const edge of prismEdgeEls) edge.style.opacity = "0.5";
+  if (prismHighlightEl) prismHighlightEl.style.opacity = "0.3";
+  // prismBeamEl removed — fan paths serve as incoming light
+  for (const rp of prismRayEls) {
+    rp.style.strokeDashoffset = "0";
+    rp.style.opacity = "1";
   }
   for (const { ring, dot } of sectionNodeEls) {
     ring.setAttribute("r", "20");

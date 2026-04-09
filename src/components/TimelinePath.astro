@@ -44,6 +44,38 @@
       </feMerge>
     </filter>
 
+    <filter id="portal-glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="rainbow-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="prism-glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <linearGradient id="prism-fill-gradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="rgba(103, 232, 249, 0.06)" />
+      <stop offset="50%" stop-color="rgba(255, 255, 255, 0.03)" />
+      <stop offset="100%" stop-color="rgba(168, 85, 247, 0.06)" />
+    </linearGradient>
+
     <linearGradient id="path-gradient" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="1000">
       <stop offset="0%" stop-color="#61a4fc" />
       <stop offset="50%" stop-color="#056CF2" />
@@ -70,8 +102,15 @@
   <!-- Split paths (About section parallel lines) -->
   <g id="split-paths"></g>
 
+  <!-- Portal gateway -->
+  <g id="portal-group"></g>
+
   <!-- Fan-out paths (Projects section branches) -->
   <g id="fan-paths"></g>
+
+  <!-- Prism refraction (Research section) -->
+  <g id="prism-paths"></g>
+  <g id="prism-group"></g>
 
   <!-- Main animated draw path -->
   <path

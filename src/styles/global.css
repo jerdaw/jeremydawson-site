@@ -138,6 +138,8 @@ html[data-active-section="contact"] [data-nav-link="contact"] {
 }
 
 .section > * {
+  position: relative;
+  z-index: 3;
   width: 100%;
   max-width: var(--max-width);
   margin-left: auto;
@@ -220,7 +222,7 @@ html[data-active-section="contact"] [data-nav-link="contact"] {
 
 .hero__copy {
   position: relative;
-  z-index: 1;
+  z-index: 3;
 }
 
 .hero__eyebrow {
@@ -786,6 +788,73 @@ html[data-enhanced="true"] .timeline__entry.is-visible::after {
   stroke-linecap: round;
   fill: none;
   filter: url(#filament-glow);
+  opacity: 0;
+}
+
+.timeline-path__rainbow {
+  stroke-width: 4;
+  stroke-linecap: round;
+  fill: none;
+  filter: url(#rainbow-glow);
+  opacity: 0;
+}
+
+.portal__ring {
+  fill: none;
+  stroke: #67E8F9;
+  stroke-width: 2.5;
+  opacity: 0;
+}
+
+.portal__inner {
+  fill: rgba(103, 232, 249, 0.08);
+  stroke: rgba(103, 232, 249, 0.6);
+  stroke-width: 1.5;
+  opacity: 0;
+}
+
+.prism__body {
+  fill: url(#prism-fill-gradient);
+  stroke: rgba(103, 232, 249, 0.5);
+  stroke-width: 1.5;
+  opacity: 0;
+  filter: url(#prism-glow);
+}
+
+.prism__edge {
+  fill: none;
+  stroke: rgba(103, 232, 249, 0.8);
+  stroke-width: 1;
+  stroke-linecap: round;
+  opacity: 0;
+}
+
+.prism__glow {
+  fill: rgba(255, 255, 255, 0.06);
+  stroke: none;
+  opacity: 0;
+}
+
+.prism__highlight {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.15);
+  stroke-width: 0.5;
+  opacity: 0;
+}
+
+.prism__beam {
+  stroke: rgba(255, 255, 255, 0.85);
+  stroke-width: 3;
+  stroke-linecap: round;
+  fill: none;
+  opacity: 0;
+}
+
+.timeline-path__prism-ray {
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  fill: none;
+  filter: url(#rainbow-glow);
   opacity: 0;
 }
 
