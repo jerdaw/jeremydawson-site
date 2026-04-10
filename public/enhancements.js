@@ -194,6 +194,21 @@ function buildTimelinePath() {
   drawPath.style.strokeDasharray = String(length);
   drawPath.style.strokeDashoffset = String(length);
 
+  // Find the scroll-progress at which the main line's leading edge reaches a
+  // given Y. Lets us sync child elements (fan paths, masks) to where the main
+  // line *visually* is, not where the user has scrolled to.
+  const progressAtY = (targetY) => {
+    if (targetY <= 0) return 0;
+    let lo = 0;
+    let hi = length;
+    for (let i = 0; i < 25; i++) {
+      const m = (lo + hi) / 2;
+      if (drawPath.getPointAtLength(m).y < targetY) lo = m;
+      else hi = m;
+    }
+    return Math.min(1, Math.max(0, hi / length));
+  };
+
   // ── Per-section gradient ───────────────────────────
   if (pathGradient) {
     pathGradient.setAttribute("y2", String(docHeight));
@@ -296,9 +311,14 @@ function buildTimelinePath() {
     const projEnd = sectionBounds[3].bottom;
     const spread = colW * 0.3;
 
+    // Stop at the prism's upper face, not its center
+    const prismFaceOffset = sectionBounds.length > 4 ? 55 * 2 / 3 : 0;
+
+    // Tie fan progress to where the main line actually is, so the fan lines
+    // arrive at the prism face at the same scroll position as the main line.
     fanRange = {
-      start: projStart / docHeight,
-      end: projEnd / docHeight,
+      start: progressAtY(projStart),
+      end: progressAtY(projEnd - prismFaceOffset),
     };
 
     const fanCount = 5;
@@ -309,9 +329,6 @@ function buildTimelinePath() {
       "rgba(139, 92, 246, 0.55)",
       "rgba(99, 102, 241, 0.55)",
     ];
-
-    // Stop at the prism's upper face, not its center
-    const prismFaceOffset = sectionBounds.length > 4 ? 55 * 2 / 3 : 0;
 
     for (let f = 0; f < fanCount; f++) {
       const t = (f / (fanCount - 1)) * 2 - 1; // -1 to 1
@@ -429,10 +446,12 @@ function buildTimelinePath() {
       x1: 0, y1: 0, x2: 0, y2: docHeight,
     }, defs);
 
+    // Keep the main line fully visible until it reaches the prism's entry
+    // face, then snap it out within a few px (no fade above the prism).
     const maskStops = [
       [0, "white"],
-      [(prismCy - prismSize * 4.5) / docHeight, "white"],
-      [(prismCy - prismSize * 2) / docHeight, "black"],
+      [entryY / docHeight, "white"],
+      [(entryY + 4) / docHeight, "black"],
       [(maskRevealY - 60) / docHeight, "black"],
       [(maskRevealY + 30) / docHeight, "white"],
       [1, "white"],
@@ -520,9 +539,10 @@ function animateTimelinePath() {
   // ── Leading-edge dot ──
   if (leadingDot && progress > 0.005 && progress < 0.995) {
     const point = drawPath.getPointAtLength(pathLength * progress);
-    // Hide when dot reaches the prism face (Y-based, avoids arc-length mismatch)
+    // Hide the dot exactly when its center reaches the prism entry face,
+    // so it travels all the way down before disappearing.
     const inPrism = prismRange.faceY > 0 &&
-      point.y >= prismRange.faceY - 30 && progress <= prismRange.end + 0.02;
+      point.y >= prismRange.faceY && progress <= prismRange.end + 0.02;
     if (inPrism) {
       leadingDot.setAttribute("opacity", "0");
     } else {
@@ -619,9 +639,10 @@ function animateTimelinePath() {
       if (progress >= fanRange.start) {
         const fp = (progress - fanRange.start) / (fanRange.end - fanRange.start);
         const clamped = Math.min(1, fp);
-        const eased = 1 - Math.pow(1 - clamped, 2);
+        // Linear draw — keeps fan tips paced with the main line's leading edge.
+        // Easing here would push them ahead and they'd hit the prism early.
         fanPathEls[f].style.strokeDashoffset = String(
-          fanLengths[f] * (1 - eased),
+          fanLengths[f] * (1 - clamped),
         );
         const fadeIn = Math.min(1, fp * 5);
         // Linger after convergence, then fade
