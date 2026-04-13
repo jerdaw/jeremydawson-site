@@ -169,6 +169,7 @@ function buildTimelinePath() {
 
   const sectionMids = [];
   const sectionBounds = [];
+  let contactUnderscore = null;
 
   for (const section of sections) {
     const rect = section.getBoundingClientRect();
@@ -178,15 +179,63 @@ function buildTimelinePath() {
     const bottom = top + height;
 
     const sideX = goLeft ? leftX : rightX;
-    waypoints.push([sideX, mid]);
-    waypoints.push([cx, bottom]);
+
+    // Contact section: build a smooth underscore arc separately
+    if (section.id === "contact") {
+      const heading = section.querySelector(".section__title");
+      if (heading) {
+        const range = document.createRange();
+        range.selectNodeContents(heading);
+        const tRect = range.getBoundingClientRect();
+        const tStr = getComputedStyle(heading).transform;
+        const hTY = tStr && tStr !== "none" ? new DOMMatrix(tStr).m42 : 0;
+        const underY = tRect.bottom + window.scrollY - hTY + 12;
+        contactUnderscore = {
+          underY,
+          textLeft: tRect.left,
+          textRight: tRect.right,
+          textMidX: (tRect.left + tRect.right) / 2,
+          bottom,
+        };
+      } else {
+        waypoints.push([sideX, mid]);
+        waypoints.push([cx, bottom]);
+      }
+    } else {
+      waypoints.push([sideX, mid]);
+      waypoints.push([cx, bottom]);
+    }
+
     sectionMids.push({ x: sideX, y: mid, goLeft, bottom });
     sectionBounds.push({ top, mid, bottom, sideX, goLeft });
     goLeft = !goLeft;
   }
 
   // ── Main path ──────────────────────────────────────
-  const d = buildBezierString(waypoints);
+  let d = buildBezierString(waypoints);
+
+  // Smooth underscore: three cubic beziers with matched tangent angles at
+  // textLeft and textRight, giving C1 continuity (no sharp corners) while
+  // maintaining a sustained near-horizontal underline under the heading.
+  if (contactUnderscore) {
+    const { underY, textLeft, textRight, bottom } = contactUnderscore;
+    const prev = waypoints[waypoints.length - 1];
+    const dy1 = underY - prev[1];
+    const dy2 = bottom - underY;
+    const textW = textRight - textLeft;
+    const spread = textW * 0.25;
+    const ta = 0.04; // tangent angle factor at junctions (~2.3° from horizontal)
+
+    // Approach: drop from center, gradually flatten to near-horizontal at text left edge
+    d += ` C ${prev[0]},${prev[1] + dy1 * 0.55} ${textLeft - spread},${underY - spread * ta} ${textLeft},${underY}`;
+    // Underline: near-horizontal sweep under the heading text
+    d += ` C ${textLeft + spread},${underY + spread * ta} ${textRight - spread},${underY - spread * ta} ${textRight},${underY}`;
+    // Exit: smoothly steepen back to vertical, return to center at bottom
+    d += ` C ${textRight + spread},${underY + spread * ta} ${cx},${bottom - dy2 * 0.55} ${cx},${bottom}`;
+    waypoints.push([textLeft, underY]);
+    waypoints.push([cx, bottom]);
+  }
+
   trackPath.setAttribute("d", d);
   drawPath.setAttribute("d", d);
 
