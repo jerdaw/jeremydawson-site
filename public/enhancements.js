@@ -164,6 +164,17 @@ function buildTimelinePath() {
   const leftX = leftMargin + colW * 0.18;
   const rightX = leftMargin + colW * 0.82;
 
+  // Per-section path side targets — tuned to avoid overlapping text.
+  // Each section's content layout determines where the path can safely go.
+  const sectionSideX = {
+    top:        leftX,                  // hero: centered text, standard sweep left
+    about:      leftMargin + colW + 60, // right of principles column
+    experience: leftMargin - 40,        // left of timeline entries
+    projects:   leftMargin + colW + 60, // right of project cards
+    research:   leftMargin - 40,        // left of speaking cards
+    contact:    rightX,                 // contact underscore logic handles this
+  };
+
   const waypoints = [[cx, 0]];
   let goLeft = true;
 
@@ -178,7 +189,7 @@ function buildTimelinePath() {
     const mid = top + height * 0.5;
     const bottom = top + height;
 
-    const sideX = goLeft ? leftX : rightX;
+    const sideX = sectionSideX[section.id] ?? (goLeft ? leftX : rightX);
 
     // Contact section: build a smooth underscore arc separately
     if (section.id === "contact") {
@@ -203,7 +214,18 @@ function buildTimelinePath() {
       }
     } else {
       waypoints.push([sideX, mid]);
-      waypoints.push([cx, bottom]);
+      // At section boundaries, stay near the edge instead of returning to center.
+      // This prevents the bezier from sweeping through text in the next section.
+      // Hero and contact use center; others use the midpoint between cx and the
+      // next section's side position.
+      const isEdgeSection = section.id !== "top";
+      if (isEdgeSection) {
+        // Stay on the same side at the bottom — the bezier into the next
+        // section will handle the cross-over smoothly.
+        waypoints.push([sideX, bottom]);
+      } else {
+        waypoints.push([cx, bottom]);
+      }
     }
 
     sectionMids.push({ x: sideX, y: mid, goLeft, bottom });
@@ -358,7 +380,7 @@ function buildTimelinePath() {
 
     const projStart = sectionBounds[2].bottom;
     const projEnd = sectionBounds[3].bottom;
-    const spread = colW * 0.3;
+    const spread = colW * 0.03;
 
     // Stop at the prism's upper face, not its center
     const prismFaceOffset = sectionBounds.length > 4 ? 55 * 2 / 3 : 0;
@@ -458,9 +480,12 @@ function buildTimelinePath() {
       faceY: entryY,
     };
 
-    // Red exits near apex (least deviation), violet near bottomRight (most)
-    const spreadRange = Math.abs(cx - researchSideX);
+    // Red exits near apex (least deviation), violet near bottomRight (most).
+    // Rays converge at the research section's side position (left edge)
+    // so they travel away from centered text content.
+    const convergeX = researchSideX;
     const convergeY = researchBottom;
+    const raySpread = 30; // spread around the convergence point
 
     for (let r = 0; r < SPECTRAL_COLORS.length; r++) {
       const t = r / (SPECTRAL_COLORS.length - 1); // 0=red (least bent), 1=violet (most)
@@ -469,11 +494,12 @@ function buildTimelinePath() {
       const exitX = apexLeft[0] + (bottomRight[0] - apexLeft[0]) * exitFrac;
       const exitY = apexLeft[1] + (bottomRight[1] - apexLeft[1]) * exitFrac;
 
-      const midX = cx - t * spreadRange * 0.6;
+      // Rays fan from prism toward left edge, with slight spread
+      const midX = convergeX + (0.5 - t) * raySpread;
       const midY = researchMidY;
       const totalHeight = convergeY - prismCy;
 
-      const rayD = `M ${entryPoint[0]},${entryPoint[1]} C ${exitX},${exitY} ${exitX + (midX - exitX) * 0.5},${exitY + totalHeight * 0.15} ${midX},${midY} C ${midX},${midY + totalHeight * 0.15} ${cx},${convergeY - totalHeight * 0.15} ${cx},${convergeY}`;
+      const rayD = `M ${entryPoint[0]},${entryPoint[1]} C ${exitX},${exitY} ${exitX + (midX - exitX) * 0.5},${exitY + totalHeight * 0.15} ${midX},${midY} C ${midX},${midY + totalHeight * 0.15} ${convergeX},${convergeY - totalHeight * 0.15} ${convergeX},${convergeY}`;
 
       const path = svgEl("path", { d: rayD, class: "timeline-path__prism-ray" }, prismPathsGroup);
       path.style.stroke = SPECTRAL_COLORS[r];
