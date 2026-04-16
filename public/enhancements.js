@@ -713,6 +713,7 @@ function buildTimelinePath() {
 
 let pathLength = 0;
 let currentLerpY = 0;
+let needsLERP = false;
 
 function animateTimelinePath() {
   if (pathLength === 0 || reduceMotion) return;
@@ -748,12 +749,9 @@ function animateTimelinePath() {
     currentLerpY += (unlerpedTargetY - currentLerpY) * 0.12;
   }
   
+  needsLERP = Math.abs(unlerpedTargetY - currentLerpY) > 0.5;
   const targetY = currentLerpY;
   
-  if (Math.abs(unlerpedTargetY - currentLerpY) > 0.5) {
-    checkIdleLoop(true);
-  }
-
   let drawProgress;
   if (contactLinearInfo && progress >= contactLinearInfo.scrollFracStart) {
     const { scrollFracStart, arcStart, arcEnd } = contactLinearInfo;
@@ -1011,6 +1009,19 @@ function animateTimelinePath() {
       );
     }
   }
+
+  // ── Dispatch RAF tick ──
+  const needsPortalIdle = portalEl && parseFloat(portalEl.getAttribute("opacity") || "0") > 0;
+  const needsPrismIdle = prismBodyEl && parseFloat(prismBodyEl.style.opacity || "0") > 0;
+  
+  if ((needsLERP || needsPortalIdle || needsPrismIdle) && !reduceMotion) {
+    if (!idleLoopRunning) {
+      idleLoopRunning = true;
+      requestAnimationFrame(idleTick);
+    }
+  } else {
+    idleLoopRunning = false;
+  }
 }
 
 let resizeTimer = -1;
@@ -1028,41 +1039,18 @@ function onResize() {
   }, 150);
 }
 
-let scrollRafId = 0;
 let idleLoopRunning = false;
 
-function checkIdleLoop(forceActive = false) {
-  const needsIdle = 
-    forceActive ||
-    (portalEl && parseFloat(portalEl.getAttribute("opacity") || "0") > 0) ||
-    (prismBodyEl && parseFloat(prismBodyEl.style.opacity || "0") > 0);
-    
-  if (needsIdle && !reduceMotion) {
-    if (!idleLoopRunning) {
-      idleLoopRunning = true;
-      requestAnimationFrame(idleTick);
-    }
-  } else {
-    idleLoopRunning = false;
-  }
-}
-
 function idleTick() {
-  if (!idleLoopRunning) return;
+  idleLoopRunning = false; // Reset so animateTimelinePath can definitively reclaim it
   animateTimelinePath();
-  checkIdleLoop();
 }
 
 const onScroll = () => {
-  if (!scrollRafId && !idleLoopRunning) {
-    scrollRafId = requestAnimationFrame(() => {
-      scrollRafId = 0;
-      setActiveSection();
-      animateTimelinePath();
-      checkIdleLoop();
-    });
-  } else if (idleLoopRunning) {
-    setActiveSection();
+  setActiveSection();
+  if (!idleLoopRunning) {
+    idleLoopRunning = true;
+    requestAnimationFrame(idleTick);
   }
 };
 
