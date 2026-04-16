@@ -722,10 +722,9 @@ function buildTimelinePath() {
     } else {
       el.classList.add("glow-header--item");
     }
-    const rect = el.getBoundingClientRect();
-    const top = rect.top + window.scrollY;
-    const bottom = rect.bottom + window.scrollY;
-    glowHeaders.push({ el, top, bottom });
+    // Store only the element — we read live position each tick so reveal
+    // animations and layout shifts don't produce stale coordinates.
+    glowHeaders.push({ el, isLit: false });
   });
 
   return length;
@@ -1031,10 +1030,14 @@ function animateTimelinePath() {
   }
 
   // ── Header Glow Intersection ──
+  // Read position live so reveal transforms don't produce stale coordinates.
   const margin = 20;
   let needsGlowIdle = false;
   glowHeaders.forEach(header => {
-    const inRange = currentLerpY >= header.top - margin && currentLerpY <= header.bottom + margin;
+    const rect = header.el.getBoundingClientRect();
+    const top = rect.top + window.scrollY;
+    const bottom = rect.bottom + window.scrollY;
+    const inRange = currentLerpY >= top - margin && currentLerpY <= bottom + margin;
     if (inRange) {
       if (!header.isLit) {
         header.el.classList.add("is-illuminated");
