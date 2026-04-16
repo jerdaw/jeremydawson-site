@@ -97,12 +97,12 @@ let glowHeaders = [];
 
 // Spectral colors for rainbow/prism effects (red→violet dispersion order)
 const SPECTRAL_COLORS = [
-  "#EF4444", "#F97316", "#EAB308", "#22C55E", "#22D3EE", "#A855F7",
+  "#da6c62", "#CC9B52", "#a9dc76", "#00B3BD", "#5288BA", "#c47cbf",
 ];
 
 // Portal rainbow uses a different ordering for visual balance
 const PORTAL_COLORS = [
-  "#22D3EE", "#A855F7", "#EF4444", "#F97316", "#EAB308", "#22C55E",
+  "#00B3BD", "#c47cbf", "#da6c62", "#CC9B52", "#a9dc76", "#5288BA",
 ];
 
 function svgEl(tag, attrs, parent) {
@@ -120,15 +120,15 @@ function initDashPath(path, lengthsArray) {
   return len;
 }
 
-// Per-section gradient colors (blue -> cyan -> royal -> indigo -> purple -> lavender -> ice)
+// Per-section gradient colors (coral -> gold -> lime -> teal -> blue -> purple -> coral)
 const gradientColors = [
-  "#61a4fc",
-  "#38BDF8",
-  "#056CF2",
-  "#6366F1",
-  "#8B5CF6",
-  "#A78BFA",
-  "#67E8F9",
+  "#da6c62",
+  "#CC9B52",
+  "#a9dc76",
+  "#00B3BD",
+  "#5288BA",
+  "#c47cbf",
+  "#da6c62",
 ];
 
 function buildBezierString(waypoints) {
@@ -517,11 +517,11 @@ function buildTimelinePath() {
 
     const fanCount = 5;
     const fanColors = [
-      "rgba(99, 102, 241, 0.26)",
-      "rgba(139, 92, 246, 0.26)",
-      "rgba(168, 85, 247, 0.4)",
-      "rgba(139, 92, 246, 0.26)",
-      "rgba(99, 102, 241, 0.26)",
+      "rgba(82, 136, 186, 0.26)",
+      "rgba(196, 124, 191, 0.26)",
+      "rgba(218, 108, 98, 0.4)",
+      "rgba(196, 124, 191, 0.26)",
+      "rgba(82, 136, 186, 0.26)",
     ];
 
     for (let f = 0; f < fanCount; f++) {

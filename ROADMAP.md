@@ -7,10 +7,10 @@ Phase: `Post-launch polish — visual motion layer active`
 ## What's Live
 
 - Astro one-page site with typed content model (`src/data/profile.ts`)
-- Original dark design system (navy/black, Montserrat + Open Sans)
+- New "Watermelon-inspired" design system (dark teal, coral, warm cream; Montserrat + Open Sans)
 - GitHub Pages deployment with custom domain `jeremydawson.ca`
 - Full scroll-driven SVG timeline path animation:
-  - Per-section bezier path with gradient color shifts (blue → cyan → indigo → purple → ice)
+  - Per-section bezier path with gradient color shifts (coral → teal → steel blue)
   - Ghost echo paths, stroke widening (2.5→12px), leading-edge dot, section transition nodes
   - About section: rainbow portal split (6 parallel lines through a glowing gateway)
   - Projects section: 5-path fan-out converging at the prism face
