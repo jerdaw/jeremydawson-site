@@ -715,9 +715,17 @@ function buildTimelinePath() {
     ".section__title, .timeline__content h3, .project-card h3, .speaking-card h3"
   );
   headerEls.forEach(el => {
+    const isSection = el.classList.contains("section__title");
     el.classList.add("glow-header");
-    const y = el.getBoundingClientRect().top + window.scrollY;
-    glowHeaders.push({ el, y });
+    if (isSection) {
+      el.classList.add("glow-header--section");
+    } else {
+      el.classList.add("glow-header--item");
+    }
+    const rect = el.getBoundingClientRect();
+    const top = rect.top + window.scrollY;
+    const bottom = rect.bottom + window.scrollY;
+    glowHeaders.push({ el, top, bottom });
   });
 
   return length;
@@ -1023,10 +1031,11 @@ function animateTimelinePath() {
   }
 
   // ── Header Glow Intersection ──
+  const margin = 20;
   let needsGlowIdle = false;
   glowHeaders.forEach(header => {
-    const dist = Math.abs(header.y - currentLerpY);
-    if (dist < 40) {
+    const inRange = currentLerpY >= header.top - margin && currentLerpY <= header.bottom + margin;
+    if (inRange) {
       if (!header.isLit) {
         header.el.classList.add("is-illuminated");
         header.isLit = true;

@@ -941,6 +941,20 @@ html[data-enhanced="true"] .timeline__entry.is-visible::after {
 
 /* ── Glow Headers ── */
 .glow-header {
+  transition: text-shadow 900ms ease-out;
+}
+
+/* Section titles: glow only, no underline */
+.glow-header--section.is-illuminated {
+  text-shadow:
+    0 0 12px rgba(103, 232, 249, 0.55),
+    0 0 30px rgba(5, 108, 242, 0.3),
+    0 0 60px rgba(5, 108, 242, 0.12);
+  transition: none;
+}
+
+/* Item headers (h3): glow + underline */
+.glow-header--item {
   text-decoration: underline transparent;
   text-underline-offset: 5px;
   text-decoration-thickness: 2px;
@@ -949,7 +963,7 @@ html[data-enhanced="true"] .timeline__entry.is-visible::after {
     text-decoration-color 900ms ease-out;
 }
 
-.glow-header.is-illuminated {
+.glow-header--item.is-illuminated {
   text-shadow:
     0 0 12px rgba(103, 232, 249, 0.55),
     0 0 30px rgba(5, 108, 242, 0.3),
