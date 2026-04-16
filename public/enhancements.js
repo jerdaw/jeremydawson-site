@@ -140,6 +140,23 @@ function buildBezierString(waypoints) {
   return d;
 }
 
+let pathLUT = [];
+
+function getPointAtProgress(progress) {
+  if (pathLUT.length === 0) return { x: 0, y: 0 };
+  const step = Math.min(1, Math.max(0, progress)) * (pathLUT.length - 1);
+  const idx1 = Math.floor(step);
+  const idx2 = Math.ceil(step);
+  if (idx1 === idx2) return pathLUT[idx1];
+  const p1 = pathLUT[idx1];
+  const p2 = pathLUT[idx2];
+  const t = step - idx1;
+  return {
+    x: p1.x + (p2.x - p1.x) * t,
+    y: p1.y + (p2.y - p1.y) * t
+  };
+}
+
 // Given a target Y in document coordinates, binary-search the arc-length at
 // which the path's leading edge crosses that Y. Returns a 0..1 fraction of
 // total arc length. Used to pace the draw animation to the viewport — curved
@@ -147,16 +164,16 @@ function buildBezierString(waypoints) {
 // so a naive scrollProgress * pathLength scheme races the leading edge ahead
 // of the user's viewport and finishes early.
 function pathProgressAtY(path, length, targetY) {
-  if (!(path instanceof SVGPathElement) || length <= 0) return 0;
-  if (targetY <= 0) return 0;
+  if (pathLUT.length === 0 || length <= 0 || targetY <= 0) return 0;
   let lo = 0;
-  let hi = length;
-  for (let i = 0; i < 25; i++) {
-    const m = (lo + hi) / 2;
-    if (path.getPointAtLength(m).y < targetY) lo = m;
-    else hi = m;
+  let hi = pathLUT.length - 1;
+  while (lo <= hi) {
+    const m = (lo + hi) >> 1;
+    if (pathLUT[m].y < targetY) lo = m + 1;
+    else hi = m - 1;
   }
-  return Math.min(1, Math.max(0, hi / length));
+  const idx = Math.min(lo, pathLUT.length - 1);
+  return Math.min(1, Math.max(0, pathLUT[idx].l / length));
 }
 
 function buildTimelinePath() {
@@ -344,6 +361,14 @@ function buildTimelinePath() {
   const length = drawPath.getTotalLength();
   drawPath.style.strokeDasharray = String(length);
   drawPath.style.strokeDashoffset = String(length);
+
+  pathLUT = [];
+  const steps = Math.ceil(length / 2); // roughly 1 point every 2px
+  for (let i = 0; i <= steps; i++) {
+    const l = (i / steps) * length;
+    const pt = drawPath.getPointAtLength(l);
+    pathLUT.push({ l, x: pt.x, y: pt.y });
+  }
 
   // Publish the contact section's scroll-fraction mapping so animateTimelinePath
   // can bypass the y→arc binary search once the user reaches the loop area.
@@ -729,9 +754,10 @@ function animateTimelinePath() {
   // ── Main draw path ──
   drawPath.style.strokeDashoffset = String(pathLength * (1 - drawProgress));
 
-  // Leading Y of the main line — used to pace secondary effects so their
+  // Leading point of the main line — used to pace secondary effects so their
   // tips never extend beyond the main line's current position.
-  const mainLineY = drawPath.getPointAtLength(pathLength * drawProgress).y;
+  const mainLinePt = getPointAtProgress(drawProgress);
+  const mainLineY = mainLinePt.y;
 
   // Stroke width: 2.5 -> 12 with cubic ease-out
   const easedProgress = 1 - Math.pow(1 - progress, 3);
@@ -752,7 +778,7 @@ function animateTimelinePath() {
 
   // ── Leading-edge dot ──
   if (leadingDot && drawProgress > 0.005 && drawProgress < 0.995) {
-    const point = drawPath.getPointAtLength(pathLength * drawProgress);
+    const point = mainLinePt;
     // Hide the dot exactly when its center reaches the prism entry face,
     // so it travels all the way down before disappearing.
     const inPrism = prismRange.faceY > 0 &&
@@ -985,13 +1011,39 @@ function onResize() {
 }
 
 let scrollRafId = 0;
+let idleLoopRunning = false;
+
+function checkIdleLoop() {
+  const needsIdle = 
+    (portalEl && parseFloat(portalEl.getAttribute("opacity") || "0") > 0) ||
+    (prismBodyEl && parseFloat(prismBodyEl.style.opacity || "0") > 0);
+    
+  if (needsIdle && !reduceMotion) {
+    if (!idleLoopRunning) {
+      idleLoopRunning = true;
+      requestAnimationFrame(idleTick);
+    }
+  } else {
+    idleLoopRunning = false;
+  }
+}
+
+function idleTick() {
+  if (!idleLoopRunning) return;
+  animateTimelinePath();
+  checkIdleLoop();
+}
+
 const onScroll = () => {
-  if (!scrollRafId) {
+  if (!scrollRafId && !idleLoopRunning) {
     scrollRafId = requestAnimationFrame(() => {
       scrollRafId = 0;
       setActiveSection();
       animateTimelinePath();
+      checkIdleLoop();
     });
+  } else if (idleLoopRunning) {
+    setActiveSection();
   }
 };
 
