@@ -87,6 +87,11 @@ let prismRayEls = [];
 let prismRayLengths = [];
 let prismRange = { start: 0, end: 0, faceY: 0 };
 let terminusProgress = 1;
+// When the contact section contains a loop around the heading, the path is
+// non-monotonic in Y, so the viewport→arc-length binary search fails there.
+// We instead allocate the contact loop's arc length linearly by how far the
+// user has scrolled into the section.
+let contactLinearInfo = null;
 
 // Spectral colors for rainbow/prism effects (red→violet dispersion order)
 const SPECTRAL_COLORS = [
@@ -135,6 +140,25 @@ function buildBezierString(waypoints) {
   return d;
 }
 
+// Given a target Y in document coordinates, binary-search the arc-length at
+// which the path's leading edge crosses that Y. Returns a 0..1 fraction of
+// total arc length. Used to pace the draw animation to the viewport — curved
+// and looped segments (contact underscore!) inflate pathLength past docHeight,
+// so a naive scrollProgress * pathLength scheme races the leading edge ahead
+// of the user's viewport and finishes early.
+function pathProgressAtY(path, length, targetY) {
+  if (!(path instanceof SVGPathElement) || length <= 0) return 0;
+  if (targetY <= 0) return 0;
+  let lo = 0;
+  let hi = length;
+  for (let i = 0; i < 25; i++) {
+    const m = (lo + hi) / 2;
+    if (path.getPointAtLength(m).y < targetY) lo = m;
+    else hi = m;
+  }
+  return Math.min(1, Math.max(0, hi / length));
+}
+
 function buildTimelinePath() {
   if (
     !(svg instanceof SVGSVGElement) ||
@@ -164,6 +188,21 @@ function buildTimelinePath() {
   const leftX = leftMargin + colW * 0.18;
   const rightX = leftMargin + colW * 0.82;
 
+  // Per-section midpoint x — tuned so the curve threads column gaps and
+  // content edges instead of ploughing through body text. The 2-column
+  // grids (about / projects / research) collapse to a single column
+  // below 960px, so narrow viewports fall back to the default alternating
+  // bounds where no clean gap exists.
+  const wide = W > 960;
+  const sectionSideX = wide ? {
+    top:        leftX,                                // hero — original left sweep
+    about:      leftMargin + colW * 0.589,            // body/principles col gap
+    experience: Math.min(leftMargin + colW + 20, W - 8), // past right content edge
+    projects:   leftMargin + colW * 0.506,            // right side of card gap
+    research:   leftMargin + colW * 0.494,            // left side of card gap
+    contact:    rightX,                               // unused — custom underscore
+  } : null;
+
   const waypoints = [[cx, 0]];
   let goLeft = true;
 
@@ -178,7 +217,7 @@ function buildTimelinePath() {
     const mid = top + height * 0.5;
     const bottom = top + height;
 
-    const sideX = goLeft ? leftX : rightX;
+    const sideX = sectionSideX?.[section.id] ?? (goLeft ? leftX : rightX);
 
     // Contact section: build a smooth underscore arc separately
     if (section.id === "contact") {
@@ -189,9 +228,11 @@ function buildTimelinePath() {
         const tRect = range.getBoundingClientRect();
         const tStr = getComputedStyle(heading).transform;
         const hTY = tStr && tStr !== "none" ? new DOMMatrix(tStr).m42 : 0;
-        const underY = tRect.bottom + window.scrollY - hTY + 12;
+        const headingTopAbs = tRect.top + window.scrollY - hTY;
+        const headingBottomAbs = tRect.bottom + window.scrollY - hTY;
         contactUnderscore = {
-          underY,
+          headingTop: headingTopAbs,
+          underY: headingBottomAbs + 12,
           textLeft: tRect.left,
           textRight: tRect.right,
           textMidX: (tRect.left + tRect.right) / 2,
@@ -214,25 +255,86 @@ function buildTimelinePath() {
   // ── Main path ──────────────────────────────────────
   let d = buildBezierString(waypoints);
 
-  // Smooth underscore: three cubic beziers with matched tangent angles at
-  // textLeft and textRight, giving C1 continuity (no sharp corners) while
-  // maintaining a sustained near-horizontal underline under the heading.
-  if (contactUnderscore) {
-    const { underY, textLeft, textRight, bottom } = contactUnderscore;
-    const prev = waypoints[waypoints.length - 1];
-    const dy1 = underY - prev[1];
-    const dy2 = bottom - underY;
-    const textW = textRight - textLeft;
-    const spread = textW * 0.25;
-    const ta = 0.04; // tangent angle factor at junctions (~2.3° from horizontal)
+  // Measure the pre-contact path length so the animation can switch from
+  // viewport-tracking to a simple scroll-linear progress inside the loop.
+  // The loop is non-monotonic in Y (ascends the left flank, sweeps over the
+  // top, descends the right flank) so a y→arc-length binary search isn't
+  // usable there.
+  let contactBaseLength = 0;
+  let contactStartY = 0;
 
-    // Approach: drop from center, gradually flatten to near-horizontal at text left edge
-    d += ` C ${prev[0]},${prev[1] + dy1 * 0.55} ${textLeft - spread},${underY - spread * ta} ${textLeft},${underY}`;
-    // Underline: near-horizontal sweep under the heading text
-    d += ` C ${textLeft + spread},${underY + spread * ta} ${textRight - spread},${underY - spread * ta} ${textRight},${underY}`;
-    // Exit: smoothly steepen back to vertical, return to center at bottom
-    d += ` C ${textRight + spread},${underY + spread * ta} ${cx},${bottom - dy2 * 0.55} ${cx},${bottom}`;
-    waypoints.push([textLeft, underY]);
+  // Clockwise loop around the "Get in touch." heading. The path:
+  //   1. enters from (cx, startY) and curves right to land on the TOP of
+  //      an ellipse circumscribing the heading,
+  //   2. sweeps 4 quarter-ellipse cubics clockwise (T→R→B→L→T) so the
+  //      underline is the bottom edge of the loop and the top sweep passes
+  //      *over* the heading,
+  //   3. does one more T→R quarter so the line "continues around the right
+  //      side" after the loop,
+  //   4. exits smoothly from the right side to (cx, bottom).
+  if (contactUnderscore) {
+    drawPath.setAttribute("d", d);
+    contactBaseLength = drawPath.getTotalLength();
+
+    const { headingTop, underY, textLeft, textRight, bottom } = contactUnderscore;
+    const prev = waypoints[waypoints.length - 1];
+    const startX = prev[0];
+    const startY = prev[1];
+    contactStartY = startY;
+
+    const textW = textRight - textLeft;
+    const padX = Math.max(textW * 0.1, 36);
+    const padY = 28;
+
+    // Ellipse circumscribing the heading with some breathing room
+    const ovCx = (textLeft + textRight) / 2;
+    const topY = headingTop - padY;
+    const botY = underY;
+    const ovRy = (botY - topY) / 2;
+    const ovCy = topY + ovRy;
+    const ovRx = textW / 2 + padX;
+
+    // Cubic-Bezier constant for approximating a quarter ellipse with a
+    // single cubic. Control-arm length = k * radius.
+    const k = 0.5522847498;
+    const cX = k * ovRx;
+    const cY = k * ovRy;
+
+    // Loop anchor points (clockwise: Top → Right → Bottom → Left)
+    const T = [ovCx, topY];
+    const R = [ovCx + ovRx, ovCy];
+    const B = [ovCx, botY];
+    const L = [ovCx - ovRx, ovCy];
+
+    // Entry A→T: vertical-down tangent at the start, horizontal-right
+    // tangent at T so the line smoothly joins the clockwise loop.
+    d += ` C ${startX},${(startY + T[1]) / 2} ${T[0] - cX},${T[1]} ${T[0]},${T[1]}`;
+
+    // Q1 T→R: over-top quarter, tangents (right, down)
+    d += ` C ${T[0] + cX},${T[1]} ${R[0]},${R[1] - cY} ${R[0]},${R[1]}`;
+    // Q2 R→B: right-flank descent to underline, tangents (down, left)
+    d += ` C ${R[0]},${R[1] + cY} ${B[0] + cX},${B[1]} ${B[0]},${B[1]}`;
+    // Q3 B→L: underline sweep, tangents (left, up)
+    d += ` C ${B[0] - cX},${B[1]} ${L[0]},${L[1] + cY} ${L[0]},${L[1]}`;
+    // Q4 L→T: left-flank rise, tangents (up, right) — closes the loop
+    d += ` C ${L[0]},${L[1] - cY} ${T[0] - cX},${T[1]} ${T[0]},${T[1]}`;
+    // Q5 T→R: second pass, "continue around the right side"
+    d += ` C ${T[0] + cX},${T[1]} ${R[0]},${R[1] - cY} ${R[0]},${R[1]}`;
+
+    // Exit: return to the column-gap centerline just below the loop, then
+    // descend straight to the section bottom. A single curving cubic from R
+    // to (cx, bottom) would cut diagonally through the right-column cards.
+    const returnY = Math.min(bottom - 40, botY + 70);
+    const dyRet = returnY - R[1];
+    d += ` C ${R[0]},${R[1] + dyRet * 0.5} ${cx},${returnY - dyRet * 0.5} ${cx},${returnY}`;
+    const dyE = bottom - returnY;
+    d += ` C ${cx},${returnY + dyE * 0.33} ${cx},${bottom - dyE * 0.33} ${cx},${bottom}`;
+
+    // Single waypoint at (cx, bottom) so the terminus orb lands at the
+    // section bottom and the ghost paths descend to the same endpoint.
+    // We intentionally skip the loop waypoints — ghost paths use
+    // buildBezierString which can't reproduce the loop shape, so we let
+    // them ride a simple vertical descent through the contact area.
     waypoints.push([cx, bottom]);
   }
 
@@ -243,20 +345,31 @@ function buildTimelinePath() {
   drawPath.style.strokeDasharray = String(length);
   drawPath.style.strokeDashoffset = String(length);
 
-  // Find the scroll-progress at which the main line's leading edge reaches a
-  // given Y. Lets us sync child elements (fan paths, masks) to where the main
-  // line *visually* is, not where the user has scrolled to.
-  const progressAtY = (targetY) => {
-    if (targetY <= 0) return 0;
-    let lo = 0;
-    let hi = length;
-    for (let i = 0; i < 25; i++) {
-      const m = (lo + hi) / 2;
-      if (drawPath.getPointAtLength(m).y < targetY) lo = m;
-      else hi = m;
-    }
-    return Math.min(1, Math.max(0, hi / length));
-  };
+  // Publish the contact section's scroll-fraction mapping so animateTimelinePath
+  // can bypass the y→arc binary search once the user reaches the loop area.
+  //
+  // The draw-tracking point moves with the user: targetY = scrollY + winH*progress,
+  // so it starts at the viewport top (progress=0) and drifts to the viewport
+  // bottom (progress=1).  The crossover into the contact section happens when
+  // targetY = contactStartY, which solves to scrollFracStart = contactStartY / docHeight.
+  if (contactUnderscore) {
+    const scrollFracStart = Math.max(
+      0,
+      Math.min(1, contactStartY / Math.max(1, docHeight)),
+    );
+    contactLinearInfo = {
+      scrollFracStart,
+      arcStart: contactBaseLength,
+      arcEnd: length,
+    };
+  } else {
+    contactLinearInfo = null;
+  }
+
+  // Find the arc-length fraction at which the main line's leading edge
+  // reaches a given Y. Lets us sync child elements (fan paths, masks) to
+  // where the main line *visually* is, not where the user has scrolled to.
+  const progressAtY = (targetY) => pathProgressAtY(drawPath, length, targetY);
 
   // ── Per-section gradient ───────────────────────────
   if (pathGradient) {
@@ -308,7 +421,7 @@ function buildTimelinePath() {
       const dot = svgEl("circle", { cx: nx, cy: ny, r: 0, class: "section-node__dot", fill: "url(#path-gradient)" }, sectionNodesGroup);
 
       sectionNodeEls.push({ ring, dot });
-      sectionNodeYs.push(ny / docHeight);
+      sectionNodeYs.push(progressAtY(ny));
     }
   }
 
@@ -324,8 +437,10 @@ function buildTimelinePath() {
     const aboutSideX = sectionBounds[1].sideX;
 
     splitRange = {
-      start: prevBottom / docHeight,
-      end: aboutBottom / docHeight,
+      start: progressAtY(prevBottom),
+      end: progressAtY(aboutBottom),
+      startY: prevBottom,
+      endY: aboutBottom,
     };
 
     const LINE_SPACING = 10;
@@ -342,7 +457,7 @@ function buildTimelinePath() {
       initDashPath(path, splitLengths);
     }
 
-    portalProgress = prevBottom / docHeight;
+    portalProgress = progressAtY(prevBottom);
     if (portalGroup) {
       portalGroup.innerHTML = "";
       portalEl = svgEl("ellipse", { cx, cy: prevBottom, rx: 35, ry: 18, class: "portal__ring", filter: "url(#portal-glow)" }, portalGroup);
@@ -362,21 +477,24 @@ function buildTimelinePath() {
 
     // Stop at the prism's upper face, not its center
     const prismFaceOffset = sectionBounds.length > 4 ? 55 * 2 / 3 : 0;
+    const fanEndY = projEnd - prismFaceOffset;
 
     // Tie fan progress to where the main line actually is, so the fan lines
     // arrive at the prism face at the same scroll position as the main line.
     fanRange = {
       start: progressAtY(projStart),
-      end: progressAtY(projEnd - prismFaceOffset),
+      end: progressAtY(fanEndY),
+      startY: projStart,
+      endY: fanEndY,
     };
 
     const fanCount = 5;
     const fanColors = [
-      "rgba(99, 102, 241, 0.55)",
-      "rgba(139, 92, 246, 0.55)",
-      "rgba(168, 85, 247, 0.6)",
-      "rgba(139, 92, 246, 0.55)",
-      "rgba(99, 102, 241, 0.55)",
+      "rgba(99, 102, 241, 0.26)",
+      "rgba(139, 92, 246, 0.26)",
+      "rgba(168, 85, 247, 0.4)",
+      "rgba(139, 92, 246, 0.26)",
+      "rgba(99, 102, 241, 0.26)",
     ];
 
     for (let f = 0; f < fanCount; f++) {
@@ -385,7 +503,7 @@ function buildTimelinePath() {
       const midX = cx + t * spread * 0.4;
       const peakY = projStart + (projEnd - projStart) * 0.55;
       const midY = projStart + (projEnd - projStart) * 0.3;
-      const endY = projEnd - prismFaceOffset;
+      const endY = fanEndY;
 
       const fanD = `M ${cx},${projStart} C ${midX},${midY} ${peakX},${midY + 60} ${peakX},${peakY} C ${peakX},${peakY + (endY - peakY) * 0.5} ${cx},${endY - (endY - peakY) * 0.2} ${cx},${endY}`;
       const path = svgEl("path", { d: fanD, class: "timeline-path__fan" }, fanPathsGroup);
@@ -453,9 +571,10 @@ function buildTimelinePath() {
     const researchSideX = sectionBounds[4].sideX;
 
     prismRange = {
-      start: prismCy / docHeight,
-      end: researchBottom / docHeight,
+      start: progressAtY(prismCy),
+      end: progressAtY(researchBottom),
       faceY: entryY,
+      endY: researchBottom,
     };
 
     // Red exits near apex (least deviation), violet near bottomRight (most)
@@ -471,9 +590,19 @@ function buildTimelinePath() {
 
       const midX = cx - t * spreadRange * 0.6;
       const midY = researchMidY;
-      const totalHeight = convergeY - prismCy;
 
-      const rayD = `M ${entryPoint[0]},${entryPoint[1]} C ${exitX},${exitY} ${exitX + (midX - exitX) * 0.5},${exitY + totalHeight * 0.15} ${midX},${midY} C ${midX},${midY + totalHeight * 0.15} ${cx},${convergeY - totalHeight * 0.15} ${cx},${convergeY}`;
+      // Three cubics with vertical tangents at every junction so the ray
+      // enters the prism in the same direction as the main line above it
+      // (vertical), bends inside the prism toward its dispersion exit,
+      // then continues to the convergence point.
+      const dy1 = exitY - entryPoint[1];
+      const dy2 = midY - exitY;
+      const dy3 = convergeY - midY;
+      const inside = `C ${entryPoint[0]},${entryPoint[1] + dy1 * 0.5} ${exitX},${exitY - dy1 * 0.5} ${exitX},${exitY}`;
+      const out1 = `C ${exitX},${exitY + dy2 * 0.5} ${midX},${midY - dy2 * 0.5} ${midX},${midY}`;
+      const out2 = `C ${midX},${midY + dy3 * 0.5} ${cx},${convergeY - dy3 * 0.5} ${cx},${convergeY}`;
+
+      const rayD = `M ${entryPoint[0]},${entryPoint[1]} ${inside} ${out1} ${out2}`;
 
       const path = svgEl("path", { d: rayD, class: "timeline-path__prism-ray" }, prismPathsGroup);
       path.style.stroke = SPECTRAL_COLORS[r];
@@ -523,7 +652,7 @@ function buildTimelinePath() {
     const last = waypoints[waypoints.length - 1];
     terminusOrb.setAttribute("cx", String(last[0]));
     terminusOrb.setAttribute("cy", String(last[1]));
-    terminusProgress = last[1] / docHeight;
+    terminusProgress = progressAtY(last[1]);
   }
 
   // ── Branch filaments at each timeline entry ────────
@@ -550,7 +679,7 @@ function buildTimelinePath() {
       const path = svgEl("path", { d: bD, class: "timeline-path__branch" }, branchGroup);
       branchPathEls.push(path);
       initDashPath(path, branchLengths);
-      branchThresholds.push(entryY / docHeight);
+      branchThresholds.push(progressAtY(entryY));
     });
   }
 
@@ -565,10 +694,44 @@ function animateTimelinePath() {
 
   const docH = document.documentElement.scrollHeight;
   const winH = window.innerHeight;
+  // Scroll progress — used for driving scroll-anchored effects (portal,
+  // prism, fan, branch filaments, stroke width) that should fire at specific
+  // scroll positions regardless of how much arc length the main line has
+  // accumulated.
   const progress = window.scrollY / Math.max(docH - winH, 1);
 
+  // Draw progress — tracks how much of the path to reveal.
+  //
+  // The tracking point drifts as the user scrolls:
+  //   targetY = scrollY + winH * progress
+  // At the top of the page (progress=0) it sits at the viewport top edge,
+  // so 0% is drawn initially.  At the bottom of the page (progress=1) it
+  // sits at the viewport bottom edge, so the line finishes exactly as the
+  // user reaches the end.  Throughout the journey the tip is visible at a
+  // position that is (progress * 100)% down the viewport.
+  //
+  // The contact section contains a non-monotonic loop so the Y→arc binary
+  // search is unreliable there.  We switch to a scroll-fraction linear ramp;
+  // the crossover is seamless because scrollFracStart = contactStartY/docH,
+  // which is the exact scroll fraction where targetY first reaches contactStartY.
+  const targetY = window.scrollY + winH * progress;
+  let drawProgress;
+  if (contactLinearInfo && progress >= contactLinearInfo.scrollFracStart) {
+    const { scrollFracStart, arcStart, arcEnd } = contactLinearInfo;
+    const remaining = Math.max(0.0001, 1 - scrollFracStart);
+    const t = Math.min(1, Math.max(0, (progress - scrollFracStart) / remaining));
+    const arcS = arcStart + (arcEnd - arcStart) * t;
+    drawProgress = Math.min(1, Math.max(0, arcS / pathLength));
+  } else {
+    drawProgress = pathProgressAtY(drawPath, pathLength, targetY);
+  }
+
   // ── Main draw path ──
-  drawPath.style.strokeDashoffset = String(pathLength * (1 - progress));
+  drawPath.style.strokeDashoffset = String(pathLength * (1 - drawProgress));
+
+  // Leading Y of the main line — used to pace secondary effects so their
+  // tips never extend beyond the main line's current position.
+  const mainLineY = drawPath.getPointAtLength(pathLength * drawProgress).y;
 
   // Stroke width: 2.5 -> 12 with cubic ease-out
   const easedProgress = 1 - Math.pow(1 - progress, 3);
@@ -576,9 +739,11 @@ function animateTimelinePath() {
   drawPath.style.strokeWidth = String(strokeW);
 
   // ── Ghost paths (trail behind main, scale with width) ──
+  // Tie ghost offsets to drawProgress too so they stay aligned with the main
+  // line's leading edge, not the scroll fraction.
   const ghostDelays = [0.02, 0.04, 0.06, 0.08];
   for (let g = 0; g < ghostPathEls.length; g++) {
-    const ghostProgress = Math.max(0, progress - ghostDelays[g]);
+    const ghostProgress = Math.max(0, drawProgress - ghostDelays[g]);
     ghostPathEls[g].style.strokeDashoffset = String(
       ghostLengths[g] * (1 - ghostProgress),
     );
@@ -586,12 +751,12 @@ function animateTimelinePath() {
   }
 
   // ── Leading-edge dot ──
-  if (leadingDot && progress > 0.005 && progress < 0.995) {
-    const point = drawPath.getPointAtLength(pathLength * progress);
+  if (leadingDot && drawProgress > 0.005 && drawProgress < 0.995) {
+    const point = drawPath.getPointAtLength(pathLength * drawProgress);
     // Hide the dot exactly when its center reaches the prism entry face,
     // so it travels all the way down before disappearing.
     const inPrism = prismRange.faceY > 0 &&
-      point.y >= prismRange.faceY && progress <= prismRange.end + 0.02;
+      point.y >= prismRange.faceY && drawProgress <= prismRange.end + 0.02;
     if (inPrism) {
       leadingDot.setAttribute("opacity", "0");
     } else {
@@ -609,8 +774,8 @@ function animateTimelinePath() {
     const { ring, dot } = sectionNodeEls[n];
     const threshold = sectionNodeYs[n];
 
-    if (progress >= threshold - 0.02) {
-      const p = Math.min(1, (progress - threshold + 0.02) / 0.04);
+    if (drawProgress >= threshold - 0.02) {
+      const p = Math.min(1, (drawProgress - threshold + 0.02) / 0.04);
       const e = 1 - Math.pow(1 - p, 3);
 
       ring.setAttribute("r", String(8 + e * 14));
@@ -625,13 +790,13 @@ function animateTimelinePath() {
 
   // ── Portal gateway ──
   if (portalEl && portalInnerEl) {
-    if (progress >= portalProgress - 0.03 && progress <= splitRange.end + 0.05) {
-      const portalEntry = (progress - portalProgress + 0.03) / 0.06;
+    if (drawProgress >= portalProgress - 0.03 && drawProgress <= splitRange.end + 0.05) {
+      const portalEntry = (drawProgress - portalProgress + 0.03) / 0.06;
       const portalVis = Math.min(1, Math.max(0, portalEntry));
       const scale = 1 - Math.pow(1 - portalVis, 3);
 
       const sp = splitRange.end > splitRange.start
-        ? (progress - splitRange.start) / (splitRange.end - splitRange.start)
+        ? (drawProgress - splitRange.start) / (splitRange.end - splitRange.start)
         : 0;
       const fadeOut = sp > 0.85 ? Math.max(0, 1 - (sp - 0.85) / 0.15) : 1;
 
@@ -658,20 +823,19 @@ function animateTimelinePath() {
   // ── Rainbow split paths (About section) ──
   if (splitRange.end > splitRange.start) {
     for (let s = 0; s < splitPathEls.length; s++) {
-      if (progress >= splitRange.start && progress <= splitRange.end + 0.05) {
-        const range = splitRange.end - splitRange.start;
-        const sp = (progress - splitRange.start) / range;
+      if (drawProgress >= splitRange.start && drawProgress <= splitRange.end + 0.05) {
+        // Draw position tracks main line Y — tips stay at viewport bottom, not ahead
+        const yRange = splitRange.endY - splitRange.startY;
+        const yFrac = yRange > 0
+          ? Math.min(1, Math.max(0, (mainLineY - splitRange.startY) / yRange))
+          : 0;
+        splitPathEls[s].style.strokeDashoffset = String(splitLengths[s] * (1 - yFrac));
 
-        // Staggered emergence: each line starts slightly after the previous
+        // Opacity: staggered fade-in, fade-out near end
+        const range = splitRange.end - splitRange.start;
+        const sp = (drawProgress - splitRange.start) / Math.max(0.001, range);
         const stagger = s * 0.02;
         const adjusted = Math.max(0, sp - stagger);
-        const clamped = Math.min(1, adjusted / (1 - stagger));
-        const eased = 1 - Math.pow(1 - clamped, 2);
-
-        splitPathEls[s].style.strokeDashoffset = String(
-          splitLengths[s] * (1 - eased),
-        );
-
         const fadeIn = Math.min(1, adjusted * 6);
         const fadeOut = sp > 0.80 ? Math.max(0, 1 - (sp - 0.80) / 0.20) : 1;
         splitPathEls[s].style.opacity = String(Math.max(0, fadeIn * fadeOut));
@@ -685,14 +849,14 @@ function animateTimelinePath() {
   // ── Fan-out paths (Projects section → converge at prism) ──
   if (fanRange.end > fanRange.start) {
     for (let f = 0; f < fanPathEls.length; f++) {
-      if (progress >= fanRange.start) {
-        const fp = (progress - fanRange.start) / (fanRange.end - fanRange.start);
-        const clamped = Math.min(1, fp);
-        // Linear draw — keeps fan tips paced with the main line's leading edge.
-        // Easing here would push them ahead and they'd hit the prism early.
-        fanPathEls[f].style.strokeDashoffset = String(
-          fanLengths[f] * (1 - clamped),
-        );
+      if (drawProgress >= fanRange.start) {
+        // Draw position tracks main line Y — exact sync, no arc-length/Y mismatch
+        const fanYRange = fanRange.endY - fanRange.startY;
+        const yFrac = fanYRange > 0
+          ? Math.min(1, Math.max(0, (mainLineY - fanRange.startY) / fanYRange))
+          : 0;
+        fanPathEls[f].style.strokeDashoffset = String(fanLengths[f] * (1 - yFrac));
+        const fp = (drawProgress - fanRange.start) / Math.max(0.001, fanRange.end - fanRange.start);
         const fadeIn = Math.min(1, fp * 5);
         // Linger after convergence, then fade
         const fadeOut = fp > 1.2 ? Math.max(0, 1 - (fp - 1.2) / 0.15) : 1;
@@ -709,21 +873,21 @@ function animateTimelinePath() {
     // Prism body + beam + glow visibility
     if (prismBodyEl) {
       const ps = prismRange.start;
-      if (progress >= ps - 0.08 && progress <= prismRange.end + 0.08) {
+      if (drawProgress >= ps - 0.08 && drawProgress <= prismRange.end + 0.08) {
         // Beam fades in early and smoothly
-        const beamEntry = (progress - ps + 0.08) / 0.05;
+        const beamEntry = (drawProgress - ps + 0.08) / 0.05;
         const beamVis = Math.min(1, Math.max(0, beamEntry));
 
         // Prism body appears when beam is close
-        const prismEntry = (progress - ps + 0.03) / 0.04;
+        const prismEntry = (drawProgress - ps + 0.03) / 0.04;
         const prismVis = Math.min(1, Math.max(0, prismEntry));
 
-        const sectionP = (progress - ps) / (prismRange.end - ps);
+        const sectionP = (drawProgress - ps) / (prismRange.end - ps);
         const fadeOut = sectionP > 0.90 ? Math.max(0, 1 - (sectionP - 0.90) / 0.15) : 1;
         const opacity = prismVis * fadeOut;
 
         // Momentary flash when fan paths converge on the prism
-        const impactDelta = progress - ps;
+        const impactDelta = drawProgress - ps;
         let flash = 0;
         if (impactDelta >= -0.005 && impactDelta < 0.04) {
           const t = impactDelta < 0
@@ -759,22 +923,21 @@ function animateTimelinePath() {
 
     // Rainbow ray paths — persist well into the Contact section
     for (let r = 0; r < prismRayEls.length; r++) {
-      if (progress >= prismRange.start && progress <= prismRange.end + 0.25) {
+      if (drawProgress >= prismRange.start && drawProgress <= prismRange.end + 0.25) {
         const range = prismRange.end - prismRange.start;
-        const rp = (progress - prismRange.start) / range;
+        const rp = (drawProgress - prismRange.start) / Math.max(0.001, range);
 
+        // Draw position tracks main line Y — rays grow with the user's viewport
+        const rayYRange = prismRange.endY - prismRange.faceY;
+        const yFrac = rayYRange > 0
+          ? Math.min(1, Math.max(0, (mainLineY - prismRange.faceY) / rayYRange))
+          : 0;
+        prismRayEls[r].style.strokeDashoffset = String(prismRayLengths[r] * (1 - yFrac));
+
+        // Opacity: staggered fade-in, linger after convergence then fade
         const stagger = r * 0.025;
         const adjusted = Math.max(0, rp - stagger);
-        const clamped = Math.min(1, adjusted / (1 - stagger));
-        const eased = 1 - Math.pow(1 - clamped, 2);
-
-        prismRayEls[r].style.strokeDashoffset = String(
-          prismRayLengths[r] * (1 - eased),
-        );
-
         const fadeIn = Math.min(1, adjusted * 5);
-        // After convergence, stay visible while convergence point is on screen,
-        // then fade as user scrolls past it
         const fadeOut = rp > 1.3 ? Math.max(0, 1 - (rp - 1.3) / 0.65) : 1;
         prismRayEls[r].style.opacity = String(Math.max(0, fadeIn * fadeOut));
       } else {
@@ -786,8 +949,8 @@ function animateTimelinePath() {
 
   // ── Terminus orb ──
   if (terminusOrb) {
-    if (progress > terminusProgress - 0.08) {
-      const tp = Math.min(1, (progress - terminusProgress + 0.08) / 0.1);
+    if (drawProgress > terminusProgress - 0.08) {
+      const tp = Math.min(1, (drawProgress - terminusProgress + 0.08) / 0.1);
       const e = 1 - Math.pow(1 - tp, 3);
       terminusOrb.setAttribute("r", String(e * 22));
       terminusOrb.setAttribute("opacity", String(e * 0.7));
@@ -800,8 +963,8 @@ function animateTimelinePath() {
   // ── Branch filaments ──
   for (let b = 0; b < branchPathEls.length; b++) {
     const threshold = branchThresholds[b];
-    if (progress >= threshold) {
-      const branchProgress = Math.min(1, (progress - threshold) / 0.05);
+    if (drawProgress >= threshold) {
+      const branchProgress = Math.min(1, (drawProgress - threshold) / 0.05);
       const eased = 1 - Math.pow(1 - branchProgress, 2);
       branchPathEls[b].style.strokeDashoffset = String(
         branchLengths[b] * (1 - eased),
