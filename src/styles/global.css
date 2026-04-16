@@ -939,6 +939,17 @@ html[data-enhanced="true"] .timeline__entry.is-visible::after {
   50% { opacity: 1; r: 7; }
 }
 
+/* ── Glow Headers ── */
+.glow-header {
+  transition: text-shadow 1200ms ease-out, color 1200ms ease-out;
+}
+
+.glow-header.is-illuminated {
+  text-shadow: 0 0 16px rgba(103, 232, 249, 0.45), 0 0 32px rgba(5, 108, 242, 0.3);
+  color: #FFFFFF;
+  transition: none;
+}
+
 @keyframes node-pulse {
   0%, 100% { opacity: 0.2; }
   50% { opacity: 0.35; }
