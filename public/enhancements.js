@@ -93,6 +93,8 @@ let terminusProgress = 1;
 // user has scrolled into the section.
 let contactLinearInfo = null;
 
+let glowHeaders = [];
+
 // Spectral colors for rainbow/prism effects (red→violet dispersion order)
 const SPECTRAL_COLORS = [
   "#EF4444", "#F97316", "#EAB308", "#22C55E", "#22D3EE", "#A855F7",
@@ -708,6 +710,16 @@ function buildTimelinePath() {
     });
   }
 
+  glowHeaders = [];
+  const headerEls = document.querySelectorAll(
+    ".section__title, .timeline__content h3, .project-card h3, .speaking-card h3"
+  );
+  headerEls.forEach(el => {
+    el.classList.add("glow-header");
+    const y = el.getBoundingClientRect().top + window.scrollY;
+    glowHeaders.push({ el, y });
+  });
+
   return length;
 }
 
@@ -1010,11 +1022,29 @@ function animateTimelinePath() {
     }
   }
 
+  // ── Header Glow Intersection ──
+  let needsGlowIdle = false;
+  glowHeaders.forEach(header => {
+    const dist = Math.abs(header.y - currentLerpY);
+    if (dist < 40) {
+      if (!header.isLit) {
+        header.el.classList.add("is-illuminated");
+        header.isLit = true;
+      }
+      needsGlowIdle = true;
+    } else {
+      if (header.isLit) {
+        header.el.classList.remove("is-illuminated");
+        header.isLit = false;
+      }
+    }
+  });
+
   // ── Dispatch RAF tick ──
   const needsPortalIdle = portalEl && parseFloat(portalEl.getAttribute("opacity") || "0") > 0;
   const needsPrismIdle = prismBodyEl && parseFloat(prismBodyEl.style.opacity || "0") > 0;
   
-  if ((needsLERP || needsPortalIdle || needsPrismIdle) && !reduceMotion) {
+  if ((needsLERP || needsPortalIdle || needsPrismIdle || needsGlowIdle) && !reduceMotion) {
     if (!idleLoopRunning) {
       idleLoopRunning = true;
       requestAnimationFrame(idleTick);
