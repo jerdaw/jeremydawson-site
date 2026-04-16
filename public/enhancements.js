@@ -485,8 +485,8 @@ function buildTimelinePath() {
     portalProgress = progressAtY(prevBottom);
     if (portalGroup) {
       portalGroup.innerHTML = "";
-      portalEl = svgEl("ellipse", { cx, cy: prevBottom, rx: 35, ry: 18, class: "portal__ring", filter: "url(#portal-glow)" }, portalGroup);
-      portalInnerEl = svgEl("ellipse", { cx, cy: prevBottom, rx: 25, ry: 12, class: "portal__inner", filter: "url(#portal-glow)" }, portalGroup);
+      portalEl = svgEl("ellipse", { cx, cy: prevBottom, rx: 35, ry: 18, class: "portal__ring" }, portalGroup);
+      portalInnerEl = svgEl("ellipse", { cx, cy: prevBottom, rx: 25, ry: 12, class: "portal__inner" }, portalGroup);
     }
   }
 
@@ -569,7 +569,7 @@ function buildTimelinePath() {
     const triPoints = `${apexLeft[0]},${apexLeft[1]} ${topRight[0]},${topRight[1]} ${bottomRight[0]},${bottomRight[1]}`;
 
     // Glow layer behind body (pulses when beam hits)
-    prismGlowEl = svgEl("polygon", { points: triPoints, class: "prism__glow", filter: "url(#prism-glow)" }, prismGroup);
+    prismGlowEl = svgEl("polygon", { points: triPoints, class: "prism__glow" }, prismGroup);
     prismBodyEl = svgEl("polygon", { points: triPoints, class: "prism__body" }, prismGroup);
 
     // Bright edges
@@ -712,6 +712,7 @@ function buildTimelinePath() {
 }
 
 let pathLength = 0;
+let currentLerpY = 0;
 
 function animateTimelinePath() {
   if (pathLength === 0 || reduceMotion) return;
@@ -739,7 +740,20 @@ function animateTimelinePath() {
   // search is unreliable there.  We switch to a scroll-fraction linear ramp;
   // the crossover is seamless because scrollFracStart = contactStartY/docH,
   // which is the exact scroll fraction where targetY first reaches contactStartY.
-  const targetY = window.scrollY + winH * progress;
+  const unlerpedTargetY = window.scrollY + winH * progress;
+  
+  if (currentLerpY === 0 || Math.abs(unlerpedTargetY - currentLerpY) > docH) {
+    currentLerpY = unlerpedTargetY;
+  } else {
+    currentLerpY += (unlerpedTargetY - currentLerpY) * 0.12;
+  }
+  
+  const targetY = currentLerpY;
+  
+  if (Math.abs(unlerpedTargetY - currentLerpY) > 0.5) {
+    checkIdleLoop(true);
+  }
+
   let drawProgress;
   if (contactLinearInfo && progress >= contactLinearInfo.scrollFracStart) {
     const { scrollFracStart, arcStart, arcEnd } = contactLinearInfo;
@@ -1000,21 +1014,26 @@ function animateTimelinePath() {
 }
 
 let resizeTimer = -1;
+let lastWindowWidth = window.innerWidth;
 
 function onResize() {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
-    pathLength = buildTimelinePath();
-    animateTimelinePath();
-    setActiveSection();
+    if (window.innerWidth !== lastWindowWidth) {
+      lastWindowWidth = window.innerWidth;
+      pathLength = buildTimelinePath();
+      animateTimelinePath();
+      setActiveSection();
+    }
   }, 150);
 }
 
 let scrollRafId = 0;
 let idleLoopRunning = false;
 
-function checkIdleLoop() {
+function checkIdleLoop(forceActive = false) {
   const needsIdle = 
+    forceActive ||
     (portalEl && parseFloat(portalEl.getAttribute("opacity") || "0") > 0) ||
     (prismBodyEl && parseFloat(prismBodyEl.style.opacity || "0") > 0);
     
