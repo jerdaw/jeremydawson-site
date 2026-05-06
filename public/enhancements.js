@@ -197,6 +197,15 @@ function buildTimelinePath() {
   const oldMaskGrad = document.getElementById("prism-mask-gradient");
   if (oldMaskGrad) oldMaskGrad.remove();
 
+  // Publish the fixed header height so animateTimelinePath can clamp
+  // the draw tracking point below the nav bar on every frame.
+  const headerEl = document.querySelector(".site-header");
+  let navH = 0;
+  if (headerEl instanceof HTMLElement) {
+    navH = headerEl.offsetHeight;
+    root.style.setProperty("--header-height", navH + "px");
+  }
+
   const W = window.innerWidth;
   const maxW = 1100;
   const padding = 32;
@@ -222,7 +231,7 @@ function buildTimelinePath() {
     contact:    rightX,                               // unused — custom underscore
   } : null;
 
-  const waypoints = [[cx, 0]];
+  const waypoints = [[cx, navH]];
   let goLeft = true;
 
   const sectionMids = [];
@@ -242,16 +251,23 @@ function buildTimelinePath() {
     if (section.id === "contact") {
       const heading = section.querySelector(".section__title");
       if (heading) {
+        // Temporarily zero any reveal transform so getBoundingClientRect
+        // returns the heading's natural document position.
+        const savedTransform = heading.style.transform;
+        heading.style.transform = "none";
+        // Use a text Range for both X and Y — the element box has
+        // line-box padding, but the actual glyph extents (ascenders/descenders)
+        // can poke beyond it. The Range gives us true ink bounds so the
+        // ellipse can hug the letters tightly without crossing into the
+        // eyebrow above or the lede paragraph below.
         const range = document.createRange();
         range.selectNodeContents(heading);
         const tRect = range.getBoundingClientRect();
-        const tStr = getComputedStyle(heading).transform;
-        const hTY = tStr && tStr !== "none" ? new DOMMatrix(tStr).m42 : 0;
-        const headingTopAbs = tRect.top + window.scrollY - hTY;
-        const headingBottomAbs = tRect.bottom + window.scrollY - hTY;
+        heading.style.transform = savedTransform;
+
         contactUnderscore = {
-          headingTop: headingTopAbs,
-          underY: headingBottomAbs + 12,
+          textTop: tRect.top + window.scrollY,
+          textBottom: tRect.bottom + window.scrollY,
           textLeft: tRect.left,
           textRight: tRect.right,
           textMidX: (tRect.left + tRect.right) / 2,
@@ -295,20 +311,26 @@ function buildTimelinePath() {
     drawPath.setAttribute("d", d);
     contactBaseLength = drawPath.getTotalLength();
 
-    const { headingTop, underY, textLeft, textRight, bottom } = contactUnderscore;
+    const { textTop, textBottom, textLeft, textRight, bottom } = contactUnderscore;
     const prev = waypoints[waypoints.length - 1];
     const startX = prev[0];
     const startY = prev[1];
     contactStartY = startY;
 
     const textW = textRight - textLeft;
-    const padX = Math.max(textW * 0.1, 36);
-    const padY = 28;
+    // Tight horizontal padding — wide enough to clear the letters but not
+    // so wide that the ellipse looks unrelated to the heading.
+    const padX = Math.max(textW * 0.13, 56);
+    // Vertical padding is asymmetric because the lede paragraph sits ~12px
+    // below the heading. Top arc gets breathing room; bottom arc has to
+    // squeeze into the small gap above the lede.
+    const padYTop = 22;
+    const padYBot = 6;
 
-    // Ellipse circumscribing the heading with some breathing room
+    // Ellipse circumscribing the heading
     const ovCx = (textLeft + textRight) / 2;
-    const topY = headingTop - padY;
-    const botY = underY;
+    const topY = textTop - padYTop;
+    const botY = textBottom + padYBot;
     const ovRy = (botY - topY) / 2;
     const ovCy = topY + ovRy;
     const ovRx = textW / 2 + padX;
@@ -769,7 +791,21 @@ function animateTimelinePath() {
   }
   
   needsLERP = Math.abs(unlerpedTargetY - currentLerpY) > 0.5;
-  const targetY = currentLerpY;
+
+  // Clamp the draw tracking point so it never sits above the fixed nav bar.
+  // This keeps the line's leading tip always emerging just below the header,
+  // rather than being hidden behind it near the top of the page. As the user
+  // scrolls further, the natural targetY grows past headerH and the clamp
+  // quietly becomes a no-op — the line then follows its natural path geometry.
+  const headerH = parseFloat(root.style.getPropertyValue("--header-height")) || 0;
+  // Keep the leading tip just below the nav bar until the natural draw
+  // progress catches up. The offset ramps from 4px (at page load — line
+  // sits flush against the nav) up to 40px (~1cm — gives the user a
+  // clear sense of the line *moving* away from the nav as they start to
+  // scroll). Once natural progress overtakes this floor, the clamp
+  // releases and the line resumes its normal pace.
+  const navOffset = Math.min(40, 4 + window.scrollY * 0.3);
+  const targetY = Math.max(currentLerpY, window.scrollY + headerH + navOffset);
   
   let drawProgress;
   if (contactLinearInfo && progress >= contactLinearInfo.scrollFracStart) {

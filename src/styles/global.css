@@ -57,7 +57,7 @@ html {
 body {
   margin: 0;
   color: var(--ink);
-  font-family: "Open Sans", sans-serif;
+  font-family: "Inter", sans-serif;
   font-weight: 300;
   -webkit-font-smoothing: antialiased;
 }
@@ -91,6 +91,22 @@ main {
   isolation: isolate;
 }
 
+.site-shell::before {
+  content: "";
+  position: fixed;
+  top: 0; right: 0; bottom: 0; left: 0;
+  pointer-events: none;
+  z-index: 20;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.008;
+}
+
+@keyframes gradient-drift {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
 /* ── Header ─────────────────────────────────────────── */
 
 .site-header {
@@ -117,7 +133,7 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 0.875rem;
-  font-family: "Montserrat", sans-serif;
+  font-family: "Outfit", sans-serif;
   font-weight: 700;
   font-size: 1rem;
   letter-spacing: 0.05em;
@@ -202,6 +218,8 @@ html[data-active-section="contact"] [data-nav-link="contact"]::after {
 #research,
 #contact {
   box-shadow: inset 0 20px 40px -20px rgba(0, 0, 0, 0.35);
+  background-size: 150% 150%;
+  animation: gradient-drift 30s ease-in-out infinite;
 }
 
 #top {
@@ -211,9 +229,9 @@ html[data-active-section="contact"] [data-nav-link="contact"]::after {
   color: var(--ink-dark);
 }
 #about {
-  background:
+  background-image:
     radial-gradient(ellipse at 30% 50%, rgba(0, 179, 189, 0.07) 0%, transparent 60%),
-    var(--bg-strong);
+    linear-gradient(var(--bg-strong), var(--bg-strong));
 }
 #experience {
   background:
@@ -227,14 +245,14 @@ html[data-active-section="contact"] [data-nav-link="contact"]::after {
   color: var(--ink-dark);
 }
 #research {
-  background:
+  background-image:
     radial-gradient(ellipse at 60% 50%, rgba(196, 124, 191, 0.06) 0%, transparent 60%),
-    var(--bg);
+    linear-gradient(var(--bg), var(--bg));
 }
 #contact {
-  background:
+  background-image:
     radial-gradient(ellipse at 50% 60%, rgba(232, 117, 107, 0.07) 0%, transparent 60%),
-    var(--bg-strong);
+    linear-gradient(var(--bg-strong), var(--bg-strong));
 }
 
 /* Light section palette overrides */
@@ -272,7 +290,7 @@ html[data-active-section="contact"] [data-nav-link="contact"]::after {
   align-items: center;
   gap: 0.65rem;
   margin-bottom: 1rem;
-  font-family: "Montserrat", sans-serif;
+  font-family: "Outfit", sans-serif;
   font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -288,7 +306,7 @@ html[data-active-section="contact"] [data-nav-link="contact"]::after {
 }
 
 .section__title {
-  font-family: "Montserrat", sans-serif;
+  font-family: "Outfit", sans-serif;
   font-size: clamp(2.5rem, 6vw, 5rem);
   font-weight: 700;
   line-height: 1.05;
@@ -329,7 +347,7 @@ html[data-active-section="contact"] [data-nav-link="contact"]::after {
 
 .hero__eyebrow {
   color: var(--accent);
-  font-family: "Montserrat", sans-serif;
+  font-family: "Outfit", sans-serif;
   font-size: 0.88rem;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -339,7 +357,7 @@ html[data-active-section="contact"] [data-nav-link="contact"]::after {
 .hero__title {
   margin-top: 1.25rem;
   max-width: 16ch;
-  font-family: "Montserrat", sans-serif;
+  font-family: "Outfit", sans-serif;
   font-size: clamp(4rem, 11vw, 7rem);
   font-weight: 700;
   line-height: 1.05;
@@ -370,7 +388,7 @@ html[data-active-section="contact"] [data-nav-link="contact"]::after {
   min-height: 3.2rem;
   padding: 0.9rem 1.5rem;
   border: 1px solid transparent;
-  font-family: "Montserrat", sans-serif;
+  font-family: "Outfit", sans-serif;
   font-weight: 600;
   font-size: 0.9rem;
   letter-spacing: 0.02em;
@@ -507,7 +525,7 @@ html[data-active-section="contact"] [data-nav-link="contact"]::after {
   content: "";
   position: absolute;
   left: -2.5rem;
-  top: 2.5rem;
+  top: 4rem;
   width: 10px;
   height: 10px;
   border-radius: 2px;
@@ -532,7 +550,7 @@ html[data-enhanced="true"] .timeline__entry.is-visible::before {
   content: "";
   position: absolute;
   left: -2.5rem;
-  top: calc(2.5rem + 4px);
+  top: calc(4rem + 5px);
   width: 1.5rem;
   height: 1px;
   background: linear-gradient(to right, rgba(218, 108, 98, 0.5), transparent);
@@ -577,7 +595,7 @@ html[data-enhanced="true"] .timeline__entry.is-visible::after {
 
 .timeline__content h3 {
   margin-top: 0.3rem;
-  font-family: "Montserrat", sans-serif;
+  font-family: "Outfit", sans-serif;
   font-size: 1.3rem;
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -651,13 +669,13 @@ html[data-enhanced="true"] .timeline__entry.is-visible::after {
 
 .project-card__index {
   color: rgba(193, 217, 222, 0.2);
-  font-family: "Montserrat", sans-serif;
+  font-family: "Outfit", sans-serif;
   font-size: 1.7rem;
   font-weight: 700;
 }
 
 .project-card h3 {
-  font-family: "Montserrat", sans-serif;
+  font-family: "Outfit", sans-serif;
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: -0.04em;
@@ -757,7 +775,7 @@ html[data-enhanced="true"] .timeline__entry.is-visible::after {
 
 .speaking-card h3 {
   margin-top: 0.5rem;
-  font-family: "Montserrat", sans-serif;
+  font-family: "Outfit", sans-serif;
   font-size: 1.4rem;
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -804,7 +822,7 @@ html[data-enhanced="true"] .timeline__entry.is-visible::after {
 
 .contact-card__value {
   margin-top: 0.55rem;
-  font-family: "Montserrat", sans-serif;
+  font-family: "Outfit", sans-serif;
   font-size: 1.4rem;
   font-weight: 700;
   letter-spacing: -0.03em;
