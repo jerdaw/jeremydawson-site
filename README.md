@@ -1,16 +1,22 @@
 # Jeremy Dawson Personal Site
 
-Static Astro site for Jeremy J. Dawson's public professional hub.
+Static Astro site for Jeremy Dawson. The public site currently serves a short
+temporary placeholder while the full professional site is being rewritten.
 
 Current public-site checklist: `ROADMAP.md`
 
 ## Public documentation boundary
 
-This repository contains public project documentation and reproducible development information. Deployment details, credentials, monitoring configuration, private operational notes, and environment-specific production paths are intentionally excluded from public documentation.
+This repository contains public project documentation and reproducible
+development information. Deployment details, credentials, monitoring
+configuration, private operational notes, and environment-specific production
+paths are intentionally excluded from public documentation.
 
 ## Status
 
-This repo is public and intentionally conservative while a complete CV is being finalized. No downloadable CV or resume is published from this repo; CV available on request.
+This repo is public and intentionally conservative while the site is being
+rewritten. The generated public site is only the placeholder homepage and
+matching 404 page. No downloadable CV or resume is published from this repo.
 
 ## Commands
 
@@ -22,13 +28,18 @@ This repo is public and intentionally conservative while a complete CV is being 
 
 ## Content Editing
 
-All main site content lives in `src/data/profile.ts`.
+Active public copy lives in `src/data/profile.ts`, with the placeholder rendered
+by `src/pages/index.astro` and `src/pages/404.astro`.
 
-Only add public profile links or a downloadable CV/resume after the destination or file is current, polished, and safe for broad public review.
+Only add public profile links, project details, or a downloadable CV/resume after
+the destination or file is current, polished, and safe for broad public review.
 
 ## Deployment
 
-The site builds as static Astro output. Public deployment automation lives in `.github/workflows/deploy.yml`; private production runbooks, DNS notes, monitoring details, and environment-specific paths should stay out of public documentation.
+The site builds as static Astro output. GitHub Pages deployment lives in
+`.github/workflows/deploy.yml` and is currently manual-only via
+`workflow_dispatch`. Private production runbooks, DNS notes, monitoring details,
+and environment-specific paths should stay out of public documentation.
 
 ### Remaining manual items
 

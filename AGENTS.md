@@ -4,19 +4,21 @@ This file provides guidance for automated coding tools working on this repositor
 
 ## Project Overview
 
-Static Astro professional hub for Jeremy Dawson. Single-page, deployed to GitHub Pages at [jeremydawson.ca](https://jeremydawson.ca/).
+Static Astro site for Jeremy Dawson. The public deployment at [jeremydawson.ca](https://jeremydawson.ca/) currently serves a temporary placeholder while the full professional site is being rewritten.
 
-**Tech stack**: Astro 6, TypeScript, vanilla CSS, plain JavaScript (no framework in public/).
+**Tech stack**: Astro 6, TypeScript, vanilla CSS, plain JavaScript for any legacy browser enhancements.
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `src/data/profile.ts` | All site content — edit here first |
+| `src/data/profile.ts` | Site content and placeholder copy - edit here first |
+| `src/pages/index.astro` | Active temporary homepage |
+| `src/pages/404.astro` | Active temporary 404 page |
 | `src/styles/global.css` | Global styles and design tokens |
-| `public/enhancements.js` | All client-side scroll animation logic |
-| `src/components/TimelinePath.astro` | SVG timeline path markup and SVG defs |
-| `.github/workflows/deploy.yml` | CI: type-check → build → deploy to Pages |
+| `src/legacy-public/enhancements.js` | Archived scroll animation logic from the prior full site |
+| `src/components/TimelinePath.astro` | Archived SVG timeline path markup and SVG defs |
+| `.github/workflows/deploy.yml` | Manual type-check, build, and deploy to Pages |
 
 ## Development
 
@@ -24,19 +26,20 @@ Static Astro professional hub for Jeremy Dawson. Single-page, deployed to GitHub
 # Requires Node ≥22; Node 24 is recommended
 npm install
 npm run dev       # dev server on :4321
-npm run check     # Astro type-check (runs in CI)
+npm run check     # Astro type-check
 npm run build     # production build to dist/
+npm run preview   # local static preview after build
 ```
 
 Use local preview launch configuration if present. Do not commit local tool configuration.
 
 ## Coding Conventions
 
-- **Content**: edit `src/data/profile.ts` only — all sections, links, and metadata flow from there.
+- **Content**: edit `src/data/profile.ts` first. Active placeholder copy flows from there.
 - **Styles**: use CSS custom properties defined in `:root` (see `global.css`). Do not introduce utility-class frameworks.
-- **Animation**: all scroll-driven animation lives in `public/enhancements.js`. SVG structure is in `TimelinePath.astro`. Keep them in sync.
-- **No framework JS**: `enhancements.js` is plain vanilla ES2020+. No bundler, no imports.
-- **Accessibility**: all animation respects `prefers-reduced-motion`. Keep it that way.
+- **Legacy animation**: the prior scroll-driven animation is archived under `src/legacy-public/`; do not move it back into `public/` unless the full-site rewrite needs it.
+- **No framework JS**: any browser script should remain plain vanilla ES2020+. No bundler, no imports.
+- **Accessibility**: if animation returns, it must respect `prefers-reduced-motion`.
 - **TypeScript**: strict mode. Run `npm run check` before committing.
 
 ## Authorship and Attribution
@@ -49,20 +52,22 @@ Use local preview launch configuration if present. Do not commit local tool conf
 - Do not add `Co-Authored-By`, `Signed-off-by`, or any trailer that names an AI model.
 - Do not add AI attribution to comments, docstrings, changelogs, or any file tracked in git.
 - The git user identity (`git config user.name / user.email`) should remain as the human's.
+- `CLAUDE.md` and `GEMINI.md` must remain relative symlinks to `AGENTS.md`.
 
 ## Roadmap and Planning
 
 - Active roadmap: `ROADMAP.md`
-- Completed plans are archived under `.claude/plans/archive/`
-- Do not create new top-level documentation files without a clear need — the site is intentionally minimal.
+- Completed plans are archived under `.claude/plans/archive/` if local planning files exist.
+- Do not create new top-level documentation files without a clear need - the site is intentionally minimal.
 
 ## CI
 
-GitHub Actions workflow runs on every push to `main`:
+GitHub Actions deployment is manual-only via `workflow_dispatch`:
 1. `npm run check` — Astro + TypeScript diagnostics
 2. `npm run build` — production build
+3. Deploy to GitHub Pages
 
-Keep both passing. If CI is broken, fix it before adding features.
+Keep checks and builds passing. Do not add local Playwright runs; leave browser-style checks for GitHub CI if they are introduced later.
 
 ## What to Avoid
 
