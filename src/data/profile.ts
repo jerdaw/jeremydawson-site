@@ -89,7 +89,7 @@ export const siteMeta: SiteMeta = {
 export const comingSoon = {
   eyebrow: "Rewriting",
   title: "Jeremy Dawson",
-  message: "I took the old site down while I rewrite it.",
+  message: "This site is down while I rewrite it.",
   note: "Back when it's ready.",
 };
 
