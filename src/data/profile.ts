@@ -75,9 +75,8 @@ export type ResearchEntry = {
 };
 
 export const siteMeta: SiteMeta = {
-  title: "Jeremy Dawson | Public Site Being Rewritten",
-  description:
-    "Jeremy Dawson is rewriting his public site for a new chapter across medicine, ethics, and public-interest technology.",
+  title: "Jeremy Dawson | Rewriting",
+  description: "Jeremy Dawson's public site is being rewritten.",
   siteName: "Jeremy Dawson",
   socialImage: {
     path: "/og/jeremy-dawson-social.png",
@@ -88,17 +87,10 @@ export const siteMeta: SiteMeta = {
 };
 
 export const comingSoon = {
-  eyebrow: "A short intermission",
+  eyebrow: "Rewriting",
   title: "Jeremy Dawson",
-  message:
-    "I’m rewriting this site for a new chapter across medicine, ethics, and public-interest technology.",
-  note:
-    "The older public portfolio is offline because it was starting to describe work that no longer quite fits. A cleaner, more accurate version will take its place here.",
-  details: [
-    "Old links may be quiet for a bit.",
-    "The refresh will keep the signal and cut the stale claims.",
-    "No launch countdown; just enough of a pause to do it properly.",
-  ],
+  message: "I took the old site down while I rewrite it.",
+  note: "Back when it's ready.",
 };
 
 export const navLinks: NavLink[] = [
