@@ -10,9 +10,19 @@ const isUserSiteRepo =
   Boolean(repositoryOwner) &&
   repoName.toLowerCase() === `${repositoryOwner.toLowerCase()}.github.io`;
 const site = process.env.SITE_URL ?? "https://jeremydawson.ca";
-const base =
+const base = normalizeBasePath(
   process.env.BASE_PATH ??
-  (isGithubActions ? (isUserSiteRepo || !repoName ? "/" : `/${repoName}`) : "/");
+  (isGithubActions ? (isUserSiteRepo || !repoName ? "/" : `/${repoName}`) : "/"),
+);
+
+/**
+ * @param {string} path
+ */
+function normalizeBasePath(path) {
+  const trimmed = path.trim();
+  if (!trimmed || trimmed === "/") return "/";
+  return `/${trimmed.replace(/^\/+|\/+$/g, "")}/`;
+}
 
 export default defineConfig({
   site,

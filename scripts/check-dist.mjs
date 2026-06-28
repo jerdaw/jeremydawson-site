@@ -6,7 +6,7 @@ const rootDir = fileURLToPath(new URL("../", import.meta.url));
 const distDir = join(rootDir, "dist");
 
 const expectedBasePath = normalizeBasePath(
-  process.env.EXPECTED_BASE_PATH ?? process.env.BASE_PATH ?? "/",
+  process.env.EXPECTED_BASE_PATH ?? process.env.BASE_PATH ?? inferredAstroBasePath(),
 );
 const expectedSiteUrl = process.env.EXPECTED_SITE_URL ?? process.env.SITE_URL ?? "https://jeremydawson.ca";
 
@@ -20,6 +20,19 @@ function normalizeBasePath(value) {
   const trimmed = value.trim();
   if (!trimmed || trimmed === "/") return "/";
   return `/${trimmed.replace(/^\/+|\/+$/g, "")}/`;
+}
+
+function inferredAstroBasePath() {
+  if (process.env.GITHUB_ACTIONS !== "true") return "/";
+
+  const repository = process.env.GITHUB_REPOSITORY ?? "";
+  const [repositoryOwner, repositoryName] = repository.split("/");
+  const repoName = process.env.REPO_NAME ?? repositoryName ?? "";
+  const isUserSiteRepo =
+    Boolean(repositoryOwner) &&
+    repoName.toLowerCase() === `${repositoryOwner.toLowerCase()}.github.io`;
+
+  return isUserSiteRepo || !repoName ? "/" : `/${repoName}`;
 }
 
 function siteUrl(pathname) {
