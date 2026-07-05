@@ -42,6 +42,7 @@ Status key: `pending` · `optional` · `done` · `blocked`
 - `done` Update GitHub Actions to Node 24-backed major versions and remove the temporary Node 24 force environment override.
 - `done` Update TypeScript to 6.x while keeping `@types/node` aligned with the Node 24 runtime.
 - `done` Scope npm registry configuration so Dependabot can run npm updates without treating GitHub Packages as the public registry.
+- `done` Complete a code-adjacent writing professionalization pass for active public copy, guard expectations, and audit reporting.
 
 ## Notes
 

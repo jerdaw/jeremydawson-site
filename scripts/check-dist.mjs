@@ -108,10 +108,10 @@ assertIncludes(indexHtml, '<p class="coming-soon__eyebrow">Rewriting</p>', "Home
 assertIncludes(indexHtml, '<h1 id="coming-soon-title">Jeremy Dawson</h1>', "Homepage heading");
 assertIncludes(
   indexHtml,
-  '<p class="coming-soon__message">This site is down while I rewrite it.</p>',
+  '<p class="coming-soon__message">This public site is being rewritten.</p>',
   "Homepage message",
 );
-assertIncludes(indexHtml, '<p class="coming-soon__note">Back when it&#39;s ready.</p>', "Homepage note");
+assertIncludes(indexHtml, '<p class="coming-soon__note">Updated when the rewrite is ready.</p>', "Homepage note");
 
 assertIncludes(notFoundHtml, "<title>Page not found | Jeremy Dawson | Rewriting</title>", "404 title");
 assertIncludes(notFoundHtml, '<meta name="robots" content="noindex">', "404 robots metadata");
@@ -120,7 +120,7 @@ assertIncludes(notFoundHtml, `<meta property="og:url" content="${expectedNotFoun
 assertIncludes(notFoundHtml, `<link rel="icon" type="image/svg+xml" href="${expectedIconPath}">`, "404 favicon link");
 assertIncludes(notFoundHtml, '<p class="coming-soon__eyebrow">404</p>', "404 eyebrow");
 assertIncludes(notFoundHtml, '<h1 id="not-found-title">Page not found.</h1>', "404 heading");
-assertIncludes(notFoundHtml, '<p class="coming-soon__message">That page is gone for now.</p>', "404 message");
+assertIncludes(notFoundHtml, '<p class="coming-soon__message">The requested page is not available.</p>', "404 message");
 assertIncludes(
   notFoundHtml,
   `<a href="${expectedBasePath}">Return to the temporary homepage.</a>`,

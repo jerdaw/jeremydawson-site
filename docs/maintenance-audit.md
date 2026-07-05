@@ -710,3 +710,83 @@ Final diff summary:
 - Tracked diff: 7 files changed, 54 insertions, 12 deletions.
 - New report: `docs/maintenance-audit.md`.
 - Combined review shape: focused workflow/guard/docs/config changes plus one audit report; no dependency or lockfile changes.
+
+## Professionalization Pass - 2026-07-05
+
+### Scope And Instructions
+
+- Objective: make code-adjacent writing more professional, durable, and suitable for public review without overstating the repo's maturity or changing its process/tooling.
+- Audience/maturity assessment: public personal-site repository, currently serving a deliberately minimal temporary Astro placeholder while the full professional site is rewritten.
+- Current prompt source: `/mnt/c/Users/jer/.codex/attachments/7e875883-99f0-4c17-a6ac-e80ffbfb8788/pasted-text.txt`.
+- External prompt-pack status: `PROMPT_PACK_ROOT` was unset during this run. The previously recorded prompt-pack path under `/mnt/c/Users/jer/Downloads/` was no longer present, so the separate shared safety and deep-evidence files could not be re-read. The attached prompt's repo-native safety constraints and deep-evidence requirements were followed directly.
+- Report location decision: this existing `docs/maintenance-audit.md` file is the least intrusive repo-appropriate report location; no new documentation system or top-level documentation file was added.
+
+### Surfaces Inspected
+
+- Public docs and planning: `README.md`, `ROADMAP.md`, `AGENTS.md`, `docs/maintenance-audit.md`, `src/legacy-public/README.md`.
+- Active source and public copy: `src/data/profile.ts`, `src/pages/index.astro`, `src/pages/404.astro`, `src/layouts/BaseLayout.astro`, `src/styles/global.css`.
+- Guard scripts and command/output text: every `scripts/check-*.mjs` file.
+- CI, dependency, and package metadata: `package.json`, `.npmrc`, `.gitignore`, `.github/workflows/ci.yml`, `.github/workflows/deploy.yml`, `.github/dependabot.yml`, `astro.config.mjs`, `tsconfig.json`.
+- Archived maintained source/assets: `src/legacy-public/components/*.astro`, representative sections of `src/legacy-public/enhancements.js`, and public text in `src/legacy-public/og/jeremy-dawson-social.svg`.
+- Binary/generated/dependency surfaces: `public/favicon.ico`, `src/legacy-public/og/jeremy-dawson-social.png`, `dist/`, `.astro/`, `node_modules/`, and `package-lock.json` were not manually prose-edited. Generated/dependency/cache directories were excluded from wording decisions; lockfile and binary assets were treated as metadata/artifacts rather than prose.
+
+### Searches And Probes Run
+
+- `rg --files -uu -g '!node_modules' -g '!dist' -g '!.git' -g '!.astro'`
+- `rg -n <prompt-provided casual/profanity/excuse/temporary-personal-context terms> ...`
+- `rg -n <automation/session/provenance terms> ...`
+- `rg -n "TODO|FIXME|HACK|XXX|NOTE|BUG" ...`
+- `rg -n "Jeremy|author|I |my |personal|private" README* docs src tests .github . ...`
+- `rg -n "console\.|debugger|alert\(|throw new Error|console\.error|process\.exit|fail\(" src scripts astro.config.mjs ...`
+- `rg -n "description|title|message|note|error|failed|Missing|must|should|Return|Page not found|Rewriting|temporary|private|public|legacy|guard|check" src scripts README.md ROADMAP.md AGENTS.md .github package.json ...`
+- Manual reads of primary docs, active Astro source, guard scripts, workflows, legacy component markup, and relevant legacy animation comments.
+
+### Candidate Wording Ledger
+
+| Surface | Candidate | Decision | Rationale |
+| --- | --- | --- | --- |
+| `src/data/profile.ts` | Homepage placeholder used first-person downtime wording and a casual readiness note. | Fixed | The new copy keeps the temporary rewrite status truthful while removing unnecessary personal phrasing. |
+| `src/pages/404.astro` | 404 message said the page was unavailable in a casual temporary way. | Fixed | The replacement is neutral error text with the same meaning. |
+| `scripts/check-dist.mjs` | Generated-output guard asserted the old public-copy strings. | Fixed | Guard expectations must track the intended public copy. |
+| `ROADMAP.md` | "medical school transition" matched a suggested personal-context probe. | Left unchanged | In this repo, that is a legitimate professional content direction for the personal-site rewrite, not private diary context. |
+| `AGENTS.md` | Authorship policy names automation tools. | Left unchanged | This is an intentional repo policy, not stale session attribution. |
+| `src/legacy-public/enhancements.js` | Comments refer to "the user" in scroll/viewport explanations. | Not an issue | These comments describe site visitors and interaction mechanics, not session notes. |
+| `src/legacy-public/components/*` and social-card SVG text | Archived public-facing copy and labels. | Left unchanged | The archive is inactive, neutral, and retained for reference; changing it would be unnecessary churn. |
+| Guard-script failure messages | Error/output strings. | Left unchanged | They are factual, specific, and useful for maintainers. |
+| Existing maintenance audit text | Historical report statements about prior pass results. | Left unchanged with this appended update | The earlier sections remain historical evidence; this section records the subsequent professionalization edits. |
+
+### Changes Made
+
+- `src/data/profile.ts`: replaced first-person/chattier placeholder copy with neutral site-rewrite copy.
+- `src/pages/404.astro`: replaced the casual 404 unavailable message with neutral error text.
+- `scripts/check-dist.mjs`: updated generated-site assertions for the revised homepage and 404 copy.
+- `ROADMAP.md`: recorded the completed professionalization pass in the existing maintenance checklist.
+- `docs/maintenance-audit.md`: added this professionalization-pass report.
+
+Rewrite patterns applied:
+
+- Personal downtime phrasing -> neutral project/site status.
+- Casual temporary error wording -> stable unavailable-page wording.
+- Guard expectations -> exact generated output after the copy change.
+
+### Intentionally Unchanged Items
+
+- The site remains clearly described as a temporary placeholder; no marketing claims or production-readiness claims were added.
+- No roadmap, contribution, license, security-policy, ADR, or governance artifact was added.
+- Archived legacy source remains archived and inactive.
+- Public profile/CV/resume decisions remain owner-controlled roadmap items.
+- No dependencies, package metadata, workflow triggers, API surfaces, routes, or styling were changed.
+
+### Verification
+
+- `PATH=/home/jer/.cache/codex-node-v24.14.0-linux-x64/bin:$PATH npm run verify`: passed. Astro diagnostics reported 0 errors, 0 warnings, and 0 hints; production build generated 2 pages; all guard scripts passed.
+- `PATH=/home/jer/.cache/codex-node-v24.14.0-linux-x64/bin:$PATH npm run check:base-path`: passed. The non-root `/preview/` build completed and the generated-site smoke check passed.
+- `PATH=/home/jer/.cache/codex-node-v24.14.0-linux-x64/bin:$PATH node --check astro.config.mjs scripts/*.mjs`: passed with no syntax-check output.
+- `git diff --check`: passed with no whitespace errors.
+- `node` and `npm` are not available on the default shell `PATH` in this environment, so the known local Node 24 runtime path was used for verification.
+
+### Risks And Assumptions
+
+- The public copy change is intentionally small but visible on the placeholder homepage and 404 page.
+- The 404 link still says "temporary homepage" because that remains accurate and matches the repo's current public posture.
+- The external prompt-pack contract files were unavailable in the current environment; this is documented above rather than hidden or replaced with invented instructions.
