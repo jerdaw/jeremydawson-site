@@ -39,6 +39,16 @@ script or separate test framework is currently configured.
 Node 24 is recommended for local development and matches GitHub Actions. The
 repository includes `.node-version` for tools that read it.
 
+Optional build-time environment variables:
+
+- `SITE_URL` overrides the canonical site URL used by Astro metadata and guard
+  checks.
+- `BASE_PATH` overrides the Astro base path for non-root previews or Pages
+  project-site builds.
+- `REPO_NAME` overrides GitHub repository-name inference when deriving a Pages
+  base path in GitHub Actions. `GITHUB_ACTIONS` and `GITHUB_REPOSITORY` are read
+  from the Actions environment when present.
+
 ## Content Editing
 
 Active public copy lives in `src/data/profile.ts`, with the placeholder rendered
@@ -53,8 +63,10 @@ the destination or file is current, polished, and safe for broad public review.
 
 The site builds as static Astro output. GitHub Pages deployment lives in
 `.github/workflows/deploy.yml` and is currently manual-only via
-`workflow_dispatch`. Private production runbooks, DNS notes, monitoring details,
-and environment-specific paths should stay out of public documentation.
+`workflow_dispatch`. The manual deploy runs Astro diagnostics, builds static
+output, and runs the local guard suite before uploading the Pages artifact.
+Private production runbooks, DNS notes, monitoring details, and
+environment-specific paths should stay out of public documentation.
 
 The non-deploy check workflow in `.github/workflows/ci.yml` runs `npm run verify`
 on pushes, pull requests, and manual dispatches. Dependabot is configured for npm

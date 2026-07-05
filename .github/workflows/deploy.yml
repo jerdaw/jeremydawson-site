@@ -45,6 +45,9 @@ jobs:
           BASE_PATH: /
         run: npm run build
 
+      - name: Run guard suite
+        run: npm run check:guards
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:

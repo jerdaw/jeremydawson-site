@@ -15,7 +15,7 @@ pnpm-debug.log*
 
 # environment variables
 .env
-.env.production
+.env.*
 
 # Local/private maintainer notes. Do not commit plaintext private notes.
 private/**/*.md
@@ -37,3 +37,5 @@ private/**/*.local.*
 
 # Local tool config (launch configs, permissions, plans)
 .claude/
+.codex/
+.agents/

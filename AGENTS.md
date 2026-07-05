@@ -20,7 +20,7 @@ Static Astro site for Jeremy Dawson. The public deployment at [jeremydawson.ca](
 | `src/legacy-public/components/` | Archived prior full-site component markup |
 | `src/legacy-public/components/TimelinePath.astro` | Archived SVG timeline path markup and SVG defs |
 | `.github/workflows/ci.yml` | Non-deploy check/build workflow |
-| `.github/workflows/deploy.yml` | Manual type-check, build, and deploy to Pages |
+| `.github/workflows/deploy.yml` | Manual type-check, build, guard, and deploy to Pages |
 | `.github/dependabot.yml` | Weekly npm and GitHub Actions update configuration |
 | `.npmrc` | npm registry defaults and scoped GitHub Packages registry mapping |
 | `scripts/check-*.mjs` | Local verification guards for generated output, public boundary, repo contract, runtime metadata, tracked-file hygiene, CSS affordances, and base-path behavior |
@@ -76,7 +76,8 @@ Use local preview launch configuration if present. Do not commit local tool conf
 GitHub Actions deployment is manual-only via `workflow_dispatch`:
 1. `npm run check` — Astro + TypeScript diagnostics
 2. `npm run build` — production build
-3. Deploy to GitHub Pages
+3. `npm run check:guards` — generated output, public boundary, repo contract, tracked-file, runtime, and CSS guards
+4. Deploy to GitHub Pages
 
 The separate non-deploy `Check` workflow runs `npm run verify` on pushes, pull
 requests, and manual dispatches. `npm run verify` runs Astro diagnostics,
@@ -108,4 +109,4 @@ dependencies resolve to a non-vulnerable `yaml` version without it.
 - Do not refactor working code speculatively.
 - Do not introduce build tools, bundlers, or test frameworks without explicit agreement.
 - Do not commit `.env` files, secrets, or credentials.
-- Do not commit the `.claude/` directory (it is gitignored).
+- Do not commit local tool configuration directories such as `.claude/`, `.codex/`, or `.agents/` (they are gitignored).

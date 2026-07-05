@@ -16,13 +16,18 @@ function run(command, args, env) {
     stdio: "inherit",
   });
 
-  if (result.status !== 0) {
-    process.exit(result.status ?? 1);
+  if (result.error) {
+    console.error(`Failed to run ${command} ${args.join(" ")}: ${result.error.message}`);
+    process.exit(1);
   }
 
-  if (result.error) {
-    console.error(result.error.message);
+  if (result.signal) {
+    console.error(`${command} ${args.join(" ")} was terminated by signal ${result.signal}.`);
     process.exit(1);
+  }
+
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1);
   }
 }
 

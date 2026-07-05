@@ -34,6 +34,7 @@ Status key: `pending` · `optional` · `done` · `blocked`
 - `pending` Keep GitHub Pages deployment manual-only unless the site is ready for routine public updates again.
 - `done` Add non-deploy CI for `npm run verify` on pushes, pull requests, and manual dispatches.
 - `done` Add local `npm run verify` guards for generated output, public-boundary, repo-contract, tracked-file, runtime metadata, and CSS contract checks.
+- `done` Run the local guard suite in the manual GitHub Pages deploy before uploading the Pages artifact.
 - `done` Configure Dependabot for npm and GitHub Actions maintenance PRs.
 - `done` Reduce active placeholder source, CSS, and public data to what is actually rendered.
 - `done` Update Astro to the latest Astro 7 release and resolve the Windows `esbuild` dev-server audit advisory without using `npm audit fix --force`.
@@ -46,4 +47,4 @@ Status key: `pending` · `optional` · `done` · `blocked`
 
 - Live URL: `https://jeremydawson.ca/`
 - Public documentation intentionally excludes deployment runbooks, DNS notes, monitoring details, credentials, and environment-specific paths.
-- The GitHub Pages workflow runs `npm run check` + `npm run build` only when manually dispatched. Browser/Playwright-style checks should stay in GitHub CI if added later.
+- The GitHub Pages workflow runs `npm run check`, `npm run build`, and `npm run check:guards` when manually dispatched. Browser/Playwright-style checks should stay in GitHub CI if added later.

@@ -1,4 +1,4 @@
-import { lstatSync, readFileSync, readlinkSync } from "node:fs";
+import { existsSync, lstatSync, readFileSync, readlinkSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -15,6 +15,11 @@ function readText(file) {
 
 function assertRelativeSymlink(file, target) {
   const path = join(rootDir, file);
+  if (!existsSync(path)) {
+    fail(`${file} must exist as a symlink to ${target}.`);
+    return;
+  }
+
   const stats = lstatSync(path);
 
   if (!stats.isSymbolicLink()) {
@@ -59,6 +64,19 @@ for (const eventName of ["push", "pull_request", "schedule"]) {
 
 if (!/^\s*pages:\s*write\s*$/m.test(deployWorkflow) || !/^\s*id-token:\s*write\s*$/m.test(deployWorkflow)) {
   fail("Deploy workflow must keep GitHub Pages permissions explicit.");
+}
+
+const buildStepIndex = deployWorkflow.indexOf("run: npm run build");
+const guardStepIndex = deployWorkflow.indexOf("run: npm run check:guards");
+const uploadStepIndex = deployWorkflow.indexOf("uses: actions/upload-pages-artifact@");
+if (
+  buildStepIndex === -1 ||
+  guardStepIndex === -1 ||
+  uploadStepIndex === -1 ||
+  guardStepIndex < buildStepIndex ||
+  guardStepIndex > uploadStepIndex
+) {
+  fail("Deploy workflow must run npm run check:guards after building and before uploading the Pages artifact.");
 }
 
 if (failures.length > 0) {
