@@ -828,10 +828,10 @@ Rewrite patterns applied:
 - Production-style `GITHUB_ACTIONS=true GITHUB_REPOSITORY=jerdaw/cv SITE_URL=https://jerdaw.github.io npm run build && npm run check:guards`: passed.
 - `npm install astro@^7.0.7`: passed with `found 0 vulnerabilities`.
 - GitHub `Check` workflow on `main`: passed.
-- Manual GitHub Pages deploy on `main`: passed.
+- Manual GitHub Pages deploy was not rerun after this maintenance commit because the public site content did not change; the latest existing deploy remained healthy.
 - Live URL `https://jerdaw.github.io/cv/`: returned `200 OK` and emitted `/cv/` canonical and asset paths.
 
 ### Follow-Ups
 
-- Dependabot PR #16 should be closed and its branch deleted after this commit lands because the dependency update is superseded here.
+- Dependabot PR #16 was closed and its branch was deleted because the dependency update was superseded here.
 - Optional account-side cleanup is intentionally not documented here because public docs exclude private DNS and registrar details.
