@@ -41,8 +41,7 @@ jobs:
         env:
           GITHUB_ACTIONS: "true"
           GITHUB_REPOSITORY: ${{ github.repository }}
-          SITE_URL: https://jeremydawson.ca
-          BASE_PATH: /
+          SITE_URL: https://jerdaw.github.io
         run: npm run build
 
       - name: Run guard suite

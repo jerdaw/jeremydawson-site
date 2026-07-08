@@ -8,7 +8,7 @@ const distDir = join(rootDir, "dist");
 const expectedBasePath = normalizeBasePath(
   process.env.EXPECTED_BASE_PATH ?? process.env.BASE_PATH ?? inferredAstroBasePath(),
 );
-const expectedSiteUrl = process.env.EXPECTED_SITE_URL ?? process.env.SITE_URL ?? "https://jeremydawson.ca";
+const expectedSiteUrl = process.env.EXPECTED_SITE_URL ?? process.env.SITE_URL ?? "https://jerdaw.github.io";
 
 const failures = [];
 
@@ -70,7 +70,6 @@ function listFiles(dir) {
 const expectedFiles = [
   "index.html",
   "404.html",
-  "CNAME",
   "favicon.svg",
   "favicon.ico",
 ];
@@ -84,11 +83,6 @@ for (const file of expectedFiles) {
 
 const indexHtml = readRequiredFile(join(distDir, "index.html"));
 const notFoundHtml = readRequiredFile(join(distDir, "404.html"));
-const cname = readRequiredFile(join(distDir, "CNAME")).trim();
-
-if (cname !== "jeremydawson.ca") {
-  fail(`dist/CNAME should contain jeremydawson.ca, found: ${cname || "<empty>"}`);
-}
 
 const expectedIconPath = `${expectedBasePath}favicon.svg`;
 const expectedIndexUrl = siteUrl(expectedBasePath);

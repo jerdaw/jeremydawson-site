@@ -9,7 +9,7 @@ const repoName = process.env.REPO_NAME ?? repositoryName ?? "";
 const isUserSiteRepo =
   Boolean(repositoryOwner) &&
   repoName.toLowerCase() === `${repositoryOwner.toLowerCase()}.github.io`;
-const site = process.env.SITE_URL ?? "https://jeremydawson.ca";
+const site = process.env.SITE_URL ?? "https://jerdaw.github.io";
 const base = normalizeBasePath(
   process.env.BASE_PATH ??
   (isGithubActions ? (isUserSiteRepo || !repoName ? "/" : `/${repoName}`) : "/"),
