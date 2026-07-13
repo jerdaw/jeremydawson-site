@@ -77,9 +77,11 @@ GitHub Packages to `@jerdaw` so Dependabot does not treat `npm.pkg.github.com`
 as a replacement for the public npm registry.
 
 Node type definitions intentionally stay on the Node 24 line while local
-development and GitHub Actions use Node 24. Manual dependency changes should be
-targeted and should avoid `npm audit fix --force`; keep the YAML override until
-upstream dependencies resolve to a non-vulnerable `yaml` version without it.
+development and GitHub Actions use Node 24. TypeScript intentionally stays on
+the TypeScript 6 line until the Astro type-checking stack supports the next
+major. Manual dependency changes should be targeted and should avoid `npm audit
+fix --force`; keep the YAML override until upstream dependencies resolve to a
+non-vulnerable `yaml` version without it.
 
 ## Windows / WSL Notes
 

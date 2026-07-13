@@ -50,8 +50,9 @@ Use local preview launch configuration if present. Do not commit local tool conf
 - **Accessibility**: if animation returns, it must respect `prefers-reduced-motion`.
 - **TypeScript**: strict mode. Run `npm run check` before committing.
 - **Dependencies**: keep Node type definitions aligned with the active Node
-  runtime. This repo currently uses Node 24 and ignores `@types/node`
-  semver-major Dependabot updates until the runtime intentionally changes.
+  runtime. This repo currently uses Node 24 and TypeScript 6. It ignores
+  `@types/node` and `typescript` semver-major Dependabot updates until the
+  runtime or type-checking stack intentionally changes.
 
 ## Authorship and Attribution
 
@@ -88,7 +89,8 @@ are introduced later.
 Dependabot checks npm and GitHub Actions weekly. `.npmrc` keeps public packages
 on the npm registry and scopes GitHub Packages to `@jerdaw`, which prevents
 Dependabot from treating `npm.pkg.github.com` as an unscoped replacement for the
-public npm registry.
+public npm registry. Semver-major `typescript` updates are intentionally ignored
+until the Astro type-checking stack supports the next TypeScript major.
 
 ## Windows / WSL
 
